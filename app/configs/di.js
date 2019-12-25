@@ -19,72 +19,23 @@ serviceLocator.register('errs', () => {
   return require('restify-errors');
 });
 
-serviceLocator.register('userService', (serviceLocator) => {
+serviceLocator.register('gameService', (serviceLocator) => {
     const log = serviceLocator.get('logger');
     const mongoose = serviceLocator.get('mongoose');
     const httpStatus = serviceLocator.get('httpStatus');
     const errs = serviceLocator.get('errs');
-    const UserService = require('../services/user');
-    //const crypto = require('../middlewares/crypto');
+    const GameService = require('../services/game');
 
-    return new UserService(log, mongoose, httpStatus, errs);
+    return new GameService(log, mongoose, httpStatus, errs);
 });
 
-serviceLocator.register('userController', (serviceLocator) => {
+serviceLocator.register('gameController', (serviceLocator) => {
     const log = serviceLocator.get('logger');
     const httpStatus = serviceLocator.get('httpStatus');
-    const userService = serviceLocator.get('userService');
-    const UserController = require('../controllers/user');
+    const gameService = serviceLocator.get('gameService');
+    const GameController = require('../controllers/game');
 
-    return new UserController(log, userService, httpStatus);
-});
-
-serviceLocator.register('storyService', (serviceLocator) => {
-    const log = serviceLocator.get('logger');
-    const mongoose = serviceLocator.get('mongoose');
-    const httpStatus = serviceLocator.get('httpStatus');
-    const errs = serviceLocator.get('errs');
-    const StoryService = require('../services/story');
-    const storySchema = require('../models/Stories');
-
-    return new StoryService(log, mongoose, httpStatus, errs, storySchema);
-});
-
-serviceLocator.register('storyController', (serviceLocator) => {
-    const log = serviceLocator.get('logger');
-    const httpStatus = serviceLocator.get('httpStatus');
-    const storyService = serviceLocator.get('storyService');
-    const StoryController = require('../controllers/story');
-
-    return new StoryController(log, storyService, httpStatus);
-});
-
-serviceLocator.register('pageService', (serviceLocator) => {
-    const log = serviceLocator.get('logger');
-    const mongoose = serviceLocator.get('mongoose');
-    const httpStatus = serviceLocator.get('httpStatus');
-    const errs = serviceLocator.get('errs');
-    const PageService = require('../services/page');
-    const pageSchema = require('../models/Pages');
-    const buttonSchema = require('../models/Buttons');
-
-    return new PageService(log, mongoose, httpStatus, errs, pageSchema, buttonSchema);
-});
-
-serviceLocator.register('pageController', (serviceLocator) => {
-    const log = serviceLocator.get('logger');
-    const httpStatus = serviceLocator.get('httpStatus');
-    const pageService = serviceLocator.get('pageService');
-    const PageController = require('../controllers/page');
-
-    return new PageController(log, pageService, httpStatus);
-});
-
-serviceLocator.register('cryptoMiddleware', (serviceLocator) => {
-    const log = serviceLocator.get('logger');  
-    const crypto = require('../middlewares/crypto');
-
-    return new crypto(log);
+    return new GameController(log, gameService, httpStatus);
 });
 
 module.exports = serviceLocator;

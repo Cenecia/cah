@@ -5,8 +5,7 @@ module.exports = () => ({
     name: process.env.APP_NAME,
     port: process.env.APP_PORT || 3000,
     environment: process.env.APPLICATION_ENV,
-    logpath: process.env.LOG_PATH,
-    crypto_salt: process.env.CRYPTO_SALT
+    logpath: process.env.LOG_PATH
   },
   mongo: {
     port: process.env.DB_PORT,

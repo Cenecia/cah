@@ -1,0 +1,32 @@
+{
+  "name": "cah",
+  "version": "1.0.0",
+  "description": "Cards Against Humanity API",
+  "main": "server.js",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "http-status": "^1.4.2",
+    "joi": "^14.3.1",
+    "mongoose": "^5.7.14",
+    "restify": "^8.5.0",
+    "restify-errors": "^8.0.1",
+    "restify-url-semver": "^1.1.1",
+    "winston": "^3.1.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cenecia/cah.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Cenecia/cah/issues"
+  },
+  "homepage": "https://github.com/Cenecia/cah#readme"
+}

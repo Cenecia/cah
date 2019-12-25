@@ -1,16 +1,16 @@
 'use strict';
 
-class PageController {
-  constructor(log, pageService, httpStatus) {
+class GameController {
+  constructor(log, gameService, httpStatus) {
     this.log = log;
-    this.pageService = pageService;
+    this.gameService = gameService;
     this.httpStatus = httpStatus;
   }
 
   async create(req, res) {
     try {
       const {body} = req;
-      const result = await this.pageService.createPage(body);
+      const result = await this.gameService.createGame(body);
 
       res.send(result);
     } catch (err) {
@@ -20,4 +20,4 @@ class PageController {
   }
 }
 
-module.exports = PageController;
+module.exports = GameController;

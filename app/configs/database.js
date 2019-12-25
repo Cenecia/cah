@@ -35,7 +35,7 @@ class Database {
     });
 
     // initialize Model
-    require('../models/Users');
+    //require('../models/Users');
   }
 }
 
