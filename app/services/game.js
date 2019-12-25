@@ -9,17 +9,20 @@ class GameService {
   }
 
   async createGame(body) {
-    //const Stories = this.mongoose.model('Stories',this.storySchema);
-    // let newStory = new Stories({
-    //   title: body.title,
-    //   owner: body.owner
-    // });
-    // newStory = await newStory.save();
-    let newGame = {
-      _id: "12345"
-    };
+    const Games = this.mongoose.model('Games');
+    const Players = this.mongoose.model('Players');
 
-    this.log.info('I wanna play a game...');
+    let playerOne = new Players({
+      name: body.player
+    });
+    playerOne = await playerOne.save();
+    
+    let newGame = new Games({
+      players: [ playerOne._id ]
+    });
+    newGame = await newGame.save();
+
+    this.log.info('Game On!');
     return newGame;
   }
 }
