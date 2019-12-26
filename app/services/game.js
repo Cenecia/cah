@@ -11,6 +11,11 @@ class GameService {
   async createGame(body) {
     const Games = this.mongoose.model('Games');
     const Players = this.mongoose.model('Players');
+    const BlackCards = this.mongoose.model('BlackCards');
+    const WhiteCards = this.mongoose.model('WhiteCards');
+    
+    let blackCardDeck = await BlackCards.find();
+    let whiteCardDeck = await WhiteCards.find();
 
     let playerOne = new Players({
       name: body.player
@@ -18,12 +23,26 @@ class GameService {
     playerOne = await playerOne.save();
     
     let newGame = new Games({
-      players: [ playerOne._id ]
+      players: [ playerOne._id ],
+      blackCards: [],
+      whiteCards: []
     });
+
+    blackCardDeck.forEach(b => {
+      newGame.blackCards.push(b._id);
+    });
+
+    whiteCardDeck.forEach(w => {
+      newGame.whiteCards.push(w._id);
+    });
+
     newGame = await newGame.save();
 
-    this.log.info('Game On!');
-    return newGame;
+    return {
+      whiteCardCount: newGame.whiteCards.length,
+      blackCardCount: newGame.blackCards.length,
+      gameID: newGame._id
+    };
   }
 
   async parseGame() {
@@ -99,9 +118,9 @@ class GameService {
           whiteCards.forEach(async w => {
             const exists = await WhiteCards.findOne({set: s._id, text: w});
             if(exists){
-              this.log.info("New White Card found. Added "+w+".");
+              this.log.info("White Card exists");
             } else {
-              this.log.info(exists);
+              this.log.info("New White Card found. Added "+w+".");
               let whiteCard = new WhiteCards({
                 set: s._id,
                 text: w

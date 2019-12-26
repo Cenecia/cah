@@ -19,6 +19,8 @@ const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const gameSchema = new mongoose.Schema({
   players: [{ type: ObjectId, required: true, ref: "Players" }],
+  whiteCards: [{ type: ObjectId, required: true, ref: "WhiteCards" }],
+  blackCards: [{ type: ObjectId, required: true, ref: "BlackCards" }]
 });
 
 module.exports = mongoose.model('Games', gameSchema);
