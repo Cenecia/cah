@@ -61,6 +61,63 @@ class GameService {
 
     return "Sets added";
   }
+
+  async parseCards() {
+    const https = require('https');
+    const Sets = this.mongoose.model('Sets'); 
+    let allSets = await Sets.find();
+    allSets.forEach(s => {
+      https.get('https://cards-against-humanity-api.herokuapp.com/sets/'+s.name, (resp) => {
+        let data = '';
+
+        // A chunk of data has been recieved.
+        resp.on('data', (chunk) => {
+          data += chunk;
+        });
+
+        // The whole response has been received. Print out the result.
+        resp.on('end', () => {
+          const BlackCards = this.mongoose.model('BlackCards');
+          const WhiteCards = this.mongoose.model('WhiteCards');
+          let { blackCards, whiteCards } = JSON.parse(data);
+          
+          blackCards.forEach(async b => {
+            const exists = await BlackCards.findOne({set: s._id, text: b.text});
+            if(exists){
+              this.log.info("Black Card exists");
+            } else {
+              this.log.info("New Black Card found. Added "+b.text+".");
+              let blackCard = new BlackCards({
+                set: s._id,
+                text: b.text,
+                pick: b.pick
+              });
+              blackCard = await blackCard.save();
+            }
+          });
+
+          whiteCards.forEach(async w => {
+            const exists = await WhiteCards.findOne({set: s._id, text: w});
+            if(exists){
+              this.log.info("New White Card found. Added "+w+".");
+            } else {
+              this.log.info(exists);
+              let whiteCard = new WhiteCards({
+                set: s._id,
+                text: w
+              });
+              whiteCard = await whiteCard.save();
+            }
+          });
+        });
+
+      }).on("error", (err) => {
+        this.log.info("Error: " + err.message);
+      });
+    });
+
+    return "Let's add some cards.";
+  }
 }
 
 module.exports = GameService;

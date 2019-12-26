@@ -38,6 +38,8 @@ class Database {
     require('../models/Games');
     require('../models/Players');
     require('../models/Sets');
+    require('../models/WhiteCards');
+    require('../models/BlackCards');
   }
 }
 
