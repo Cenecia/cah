@@ -18,6 +18,18 @@ class GameController {
       res.send(err);
     }
   }
+
+  //parseGame
+  async parse(req, res) {
+    try {
+      const result = await this.gameService.parseGame();
+
+      res.send(result);
+    } catch (err) {
+      this.log.error(err.message);
+      res.send(err);
+    }
+  }
 }
 
 module.exports = GameController;

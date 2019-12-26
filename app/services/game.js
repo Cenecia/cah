@@ -25,6 +25,42 @@ class GameService {
     this.log.info('Game On!');
     return newGame;
   }
+
+  async parseGame() {
+    const https = require('https');
+
+    https.get('https://cards-against-humanity-api.herokuapp.com/sets', (resp) => {
+      let data = '';
+
+      // A chunk of data has been recieved.
+      resp.on('data', (chunk) => {
+        data += chunk;
+      });
+
+      // The whole response has been received. Print out the result.
+      resp.on('end', () => {
+        const Sets = this.mongoose.model('Sets'); 
+        //this.log.info(data);
+        JSON.parse(data).forEach(async s => {
+          const exists = await Sets.findOne({name: s.setName});
+          if(exists){
+            this.log.info(exists);
+          } else {
+            let newSet = new Sets({
+              name: s.setName
+            });
+            newSet = await newSet.save();
+            this.log.info("New set found. Added "+s.setName+".");
+          }
+        });
+      });
+
+    }).on("error", (err) => {
+      this.log.info("Error: " + err.message);
+    });
+
+    return "Sets added";
+  }
 }
 
 module.exports = GameService;

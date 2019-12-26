@@ -37,6 +37,7 @@ class Database {
     // initialize Model
     require('../models/Games');
     require('../models/Players');
+    require('../models/Sets');
   }
 }
 

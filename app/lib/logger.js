@@ -35,7 +35,7 @@ module.exports = {
     return createLogger({
       transports: createTransports(config),
       format: combine(
-        label({label: 'Storytime'}),
+        label({label: 'CAH'}),
         timestamp(),
         prettyPrint()
       )
