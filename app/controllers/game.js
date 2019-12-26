@@ -19,6 +19,18 @@ class GameController {
     }
   }
 
+  async join(req, res) {
+    try {
+      const {body} = req;
+      const result = await this.gameService.joinGame(body);
+
+      res.send(result);
+    } catch (err) {
+      this.log.error(err.message);
+      res.send(err);
+    }
+  }
+
   //parseGame
   async parse(req, res) {
     try {

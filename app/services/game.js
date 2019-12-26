@@ -25,7 +25,8 @@ class GameService {
     let newGame = new Games({
       players: [ playerOne._id ],
       blackCards: [],
-      whiteCards: []
+      whiteCards: [],
+      rounds: []
     });
 
     blackCardDeck.forEach(b => {
@@ -41,7 +42,29 @@ class GameService {
     return {
       whiteCardCount: newGame.whiteCards.length,
       blackCardCount: newGame.blackCards.length,
-      gameID: newGame._id
+      gameID: newGame._id,
+      players: newGame.players
+    };
+  }
+
+  async joinGame(body) {
+    const Games = this.mongoose.model('Games');
+    const Players = this.mongoose.model('Players');
+
+    let newPlayer = new Players({
+      name: body.player
+    });
+    newPlayer = await newPlayer.save();
+    
+    let game = await Games.findOne({_id: body.gameID});
+    game.players.push(newPlayer._id);
+    game = await game.save();
+
+    return {
+      whiteCardCount: game.whiteCards.length,
+      blackCardCount: game.blackCards.length,
+      gameID: game._id,
+      players: game.players
     };
   }
 

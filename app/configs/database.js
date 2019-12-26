@@ -34,12 +34,13 @@ class Database {
       process.exit(0);
     });
 
-    // initialize Model
+    // initialize Models
     require('../models/Games');
     require('../models/Players');
     require('../models/Sets');
     require('../models/WhiteCards');
     require('../models/BlackCards');
+    require('../models/Rounds');
   }
 }
 
