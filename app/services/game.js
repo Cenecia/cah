@@ -84,6 +84,7 @@ class GameService {
     round = await round.save();
 
     game.rounds.push(round);
+    game.blackCards = game.blackCards.filter(e => e._id !== round.blackCard);
     game = await game.save();
 
     return round;
