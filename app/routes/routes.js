@@ -30,6 +30,17 @@ module.exports.register = (server, serviceLocator) => {
     }
   );
 
+  server.post(
+    {
+      path: '/games/startRound',
+      name: 'Start New Round',
+      version: '1.0.0'
+    },
+    (req, res, next) => {
+      serviceLocator.get('gameController').startRound(req, res, next)
+    }
+  );
+
   server.get(
     {
       path: '/games/parse',

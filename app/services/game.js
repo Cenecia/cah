@@ -68,6 +68,27 @@ class GameService {
     };
   }
 
+  async startRound(body) {
+    const Games = this.mongoose.model('Games');
+    const Rounds = this.mongoose.model('Rounds');
+
+    let game = await Games.findOne({_id: body.gameID});
+    let round = new Rounds({
+      players: game.players,
+      status: 'submit',
+      game: game._id,
+      blackCard: game.blackCards[Math.floor(Math.random()*game.blackCards.length)],
+      submittedWhiteCards: []
+    });
+
+    round = await round.save();
+
+    game.rounds.push(round);
+    game = await game.save();
+
+    return round;
+  }
+
   async parseGame() {
     const https = require('https');
 
