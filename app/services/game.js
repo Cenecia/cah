@@ -18,7 +18,8 @@ class GameService {
     let whiteCardDeck = await WhiteCards.find();
 
     let playerOne = new Players({
-      name: body.player
+      name: body.player,
+      hand: []
     });
     playerOne = await playerOne.save();
     
@@ -52,7 +53,8 @@ class GameService {
     const Players = this.mongoose.model('Players');
 
     let newPlayer = new Players({
-      name: body.player
+      name: body.player,
+      hand: []
     });
     newPlayer = await newPlayer.save();
     
@@ -71,6 +73,8 @@ class GameService {
   async startRound(body) {
     const Games = this.mongoose.model('Games');
     const Rounds = this.mongoose.model('Rounds');
+    const Players = this.mongoose.model('Players');
+    const handSize = 8;
 
     let game = await Games.findOne({_id: body.gameID});
     let round = new Rounds({
@@ -82,9 +86,20 @@ class GameService {
     });
 
     round = await round.save();
-
     game.rounds.push(round);
     game.blackCards = game.blackCards.filter(e => e._id !== round.blackCard);
+
+    //Give each player (handSize) white cards
+    round.players.forEach(async p => {
+      let player = await Players.findOne({_id: p._id});
+      for (let index = 0; index < handSize; index++) {
+        let whiteCard = game.whiteCards[Math.floor(Math.random()*game.whiteCards.length)];
+        player.hand.push(whiteCard);
+        game.whiteCards = game.whiteCards.filter(e => e !== whiteCard);
+      }
+      player = await player.save();
+    });
+    
     game = await game.save();
 
     return round;
