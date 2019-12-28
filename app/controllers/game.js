@@ -44,6 +44,32 @@ class GameController {
     }
   }
 
+  //submitWhiteCard
+  async submitWhiteCard(req, res) {
+    try {
+      const {body} = req;
+      const result = await this.gameService.submitWhiteCard(body);
+
+      res.send(result);
+    } catch (err) {
+      this.log.error(err.message);
+      res.send(err);
+    }
+  }
+
+  //selectBlackCard
+  async selectBlackCard(req, res) {
+    try {
+      const {body} = req;
+      const result = await this.gameService.selectBlackCard(body);
+
+      res.send(result);
+    } catch (err) {
+      this.log.error(err.message);
+      res.send(err);
+    }
+  }
+
   //parseGame
   async parse(req, res) {
     try {

@@ -8,6 +8,7 @@ class GameService {
     this.errs = errs;
   }
 
+  //games/new
   async createGame(body) {
     const Games = this.mongoose.model('Games');
     const Players = this.mongoose.model('Players');
@@ -40,14 +41,20 @@ class GameService {
 
     newGame = await newGame.save();
 
-    return {
+    let returnMe = {
       whiteCardCount: newGame.whiteCards.length,
       blackCardCount: newGame.blackCards.length,
       gameID: newGame._id,
       players: newGame.players
     };
+
+    this.log.info('New game created.');
+    this.log.info(returnMe);
+
+    return returnMe;
   }
 
+  //games/join
   async joinGame(body) {
     const Games = this.mongoose.model('Games');
     const Players = this.mongoose.model('Players');
@@ -62,14 +69,20 @@ class GameService {
     game.players.push(newPlayer._id);
     game = await game.save();
 
-    return {
+    let returnMe = {
       whiteCardCount: game.whiteCards.length,
       blackCardCount: game.blackCards.length,
       gameID: game._id,
       players: game.players
     };
+
+    this.log.info('Player joined game.');
+    this.log.info(returnMe);
+
+    return returnMe;
   }
 
+  //games/startRound
   async startRound(body) {
     const Games = this.mongoose.model('Games');
     const Rounds = this.mongoose.model('Rounds');
@@ -102,6 +115,47 @@ class GameService {
     
     game = await game.save();
 
+    this.log.info('New round started.');
+    this.log.info(round);
+    return round;
+  }
+
+  //games/submitWhiteCard
+  async submitWhiteCard (body){
+    const Games = this.mongoose.model('Games');
+    const Rounds = this.mongoose.model('Rounds');
+    const Players = this.mongoose.model('Players');
+
+    let round = await Rounds.findOne({_id: body.roundID});
+    round.submittedWhiteCards.push(body.whiteCard);
+    if(round.submittedWhiteCards.length === round.players.length-1){
+      round.status = 'select';
+    }
+    round = await round.save();
+
+    let game = await Games.findOne({_id: round.game});
+
+    let player = await Players.findOne({_id: body.playerID});
+    player.hand = player.hand.filter(e => e !== body.whiteCard);
+    let newWhiteCard = game.whiteCards[Math.floor(Math.random()*game.whiteCards.length)];
+    player.hand.push(newWhiteCard);
+    player = await player.save();
+    game.whiteCards = game.whiteCards.filter(e => e !== newWhiteCard);
+    game = await game.save();
+
+    this.log.info('White card submitted.');
+    return round;
+  }
+
+  //games/selectBlackCard
+  async selectBlackCard (body){
+    const Rounds = this.mongoose.model('Rounds');
+
+    let round = await Rounds.findOne({_id: body.roundID});
+    round.status = 'closed';
+    round = await round.save();
+
+    this.log.info('Black Card Selected.');
     return round;
   }
 

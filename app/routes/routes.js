@@ -41,6 +41,28 @@ module.exports.register = (server, serviceLocator) => {
     }
   );
 
+  server.post(
+    {
+      path: '/games/submitWhiteCard',
+      name: 'Submit White Card',
+      version: '1.0.0'
+    },
+    (req, res, next) => {
+      serviceLocator.get('gameController').submitWhiteCard(req, res, next)
+    }
+  );
+
+  server.post(
+    {
+      path: '/games/selectBlackCard',
+      name: 'Submit White Card',
+      version: '1.0.0'
+    },
+    (req, res, next) => {
+      serviceLocator.get('gameController').selectBlackCard(req, res, next)
+    }
+  );
+
   server.get(
     {
       path: '/games/parse',
