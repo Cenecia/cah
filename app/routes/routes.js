@@ -52,6 +52,18 @@ module.exports.register = (server, serviceLocator) => {
     }
   );
 
+  //getHand
+  server.post(
+    {
+      path: '/games/getHand',
+      name: 'Get Player Hand',
+      version: '1.0.0'
+    },
+    (req, res, next) => {
+      serviceLocator.get('gameController').getHand(req, res, next)
+    }
+  );
+
   server.post(
     {
       path: '/games/selectBlackCard',

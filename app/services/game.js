@@ -87,6 +87,7 @@ class GameService {
     const Games = this.mongoose.model('Games');
     const Rounds = this.mongoose.model('Rounds');
     const Players = this.mongoose.model('Players');
+    const WhiteCards = this.mongoose.model('WhiteCards');
     const handSize = 8;
 
     let game = await Games.findOne({_id: body.gameID});
@@ -104,7 +105,7 @@ class GameService {
 
     //Give each player (handSize) white cards
     round.players.forEach(async p => {
-      let player = await Players.findOne({_id: p._id});
+      let player = await Players.findOne({_id: p});
       for (let index = 0; index < handSize; index++) {
         let whiteCard = game.whiteCards[Math.floor(Math.random()*game.whiteCards.length)];
         player.hand.push(whiteCard);
@@ -115,8 +116,6 @@ class GameService {
     
     game = await game.save();
 
-    this.log.info('New round started.');
-    this.log.info(round);
     return round;
   }
 
@@ -136,7 +135,8 @@ class GameService {
     let game = await Games.findOne({_id: round.game});
 
     let player = await Players.findOne({_id: body.playerID});
-    player.hand = player.hand.filter(e => e !== body.whiteCard);
+
+    player.hand = player.hand.filter(o => o != body.whiteCard);
     let newWhiteCard = game.whiteCards[Math.floor(Math.random()*game.whiteCards.length)];
     player.hand.push(newWhiteCard);
     player = await player.save();
@@ -157,6 +157,16 @@ class GameService {
 
     this.log.info('Black Card Selected.');
     return round;
+  }
+
+  //games/getHand
+  async getHand (body){
+    const Players = this.mongoose.model('Players');
+
+    let player = await Players.findOne({_id: body.playerID}).populate('hand');
+    this.log.info(player);
+
+    return player;
   }
 
   async parseGame() {
