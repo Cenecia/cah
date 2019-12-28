@@ -87,7 +87,7 @@ class GameService {
     const Games = this.mongoose.model('Games');
     const Rounds = this.mongoose.model('Rounds');
     const Players = this.mongoose.model('Players');
-    const WhiteCards = this.mongoose.model('WhiteCards');
+    const BlackCards = this.mongoose.model('BlackCards');
     const handSize = 8;
 
     let game = await Games.findOne({_id: body.gameID});
@@ -115,6 +115,7 @@ class GameService {
     });
     
     game = await game.save();
+    round = Rounds.findOne({_id: round._id}).populate('blackCard');
 
     return round;
   }

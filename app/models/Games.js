@@ -1,9 +1,6 @@
 'use strict';
 
 const config = require('../configs/configs');
-// const Round = require('./Rounds');
-// const WhiteCard = require('./WhiteCards');
-// const BlackCard = require('./BlackCards');
 const serviceLocator = require('../lib/service_locator');
 const mongoose = serviceLocator.get('mongoose');
 const ObjectId = mongoose.Schema.Types.ObjectId;
