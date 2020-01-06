@@ -132,6 +132,9 @@ class GameService {
     const Players = this.mongoose.model('Players');
 
     let round = await Rounds.findOne({_id: body.roundID});
+    if(round.status !== 'submit'){
+      return 'All White Cards submitted';
+    }
     round.submittedWhiteCards.push(body.whiteCard);
     if(round.submittedWhiteCards.length === round.players.length-1){
       round.status = 'select';
