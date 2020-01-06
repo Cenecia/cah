@@ -46,6 +46,7 @@ function formatJSend(req, res, body) {
   response = JSON.stringify(response);
   res.header('Content-Length', Buffer.byteLength(response));
   res.header('Content-Type', 'application/json');
+  res.header('Access-Control-Allow-Origin', '*');
 
   return response;
 }

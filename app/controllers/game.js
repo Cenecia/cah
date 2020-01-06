@@ -70,6 +70,19 @@ class GameController {
     }
   }
 
+  //getRound
+  async getRound(req, res) {
+    try {
+      const {body} = req;
+      const result = await this.gameService.getRound(body);
+
+      res.send(result);
+    } catch (err) {
+      this.log.error(err.message);
+      res.send(err);
+    }
+  }
+
   //selectBlackCard
   async selectBlackCard(req, res) {
     try {

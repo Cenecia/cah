@@ -64,6 +64,18 @@ module.exports.register = (server, serviceLocator) => {
     }
   );
 
+  //getRound
+  server.post(
+    {
+      path: '/games/getRound',
+      name: 'Get a round in session',
+      version: '1.0.0'
+    },
+    (req, res, next) => {
+      serviceLocator.get('gameController').getRound(req, res, next)
+    }
+  );
+
   server.post(
     {
       path: '/games/selectBlackCard',
