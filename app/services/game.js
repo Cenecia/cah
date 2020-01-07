@@ -40,6 +40,7 @@ class GameService {
     });
 
     newGame = await newGame.save();
+    newGame = await Games.findOne({_id: newGame._id}).populate('players');
 
     let returnMe = {
       whiteCardCount: newGame.whiteCards.length,
@@ -69,6 +70,7 @@ class GameService {
     let game = await Games.findOne({_id: body.gameID});
     game.players.push(newPlayer._id);
     game = await game.save();
+    game = await Games.findOne({_id: body.gameID}).populate('players');
 
     let latestRound = await Rounds.findOne({game: body.gameID, status: "submit"}).populate('blackCard');
 
@@ -120,7 +122,7 @@ class GameService {
     });
     
     game = await game.save();
-    round = Rounds.findOne({_id: round._id}).populate('blackCard');
+    round = Rounds.findOne({_id: round._id}).populate('blackCard').populate('players');
 
     return round;
   }
@@ -154,7 +156,7 @@ class GameService {
 
     this.log.info('White card submitted.');
 
-    round = await Rounds.findOne({_id: body.roundID}).populate('submittedWhiteCards').populate('blackCard');
+    round = await Rounds.findOne({_id: body.roundID}).populate('submittedWhiteCards').populate('blackCard').populate('players');
     return round;
   }
   
@@ -184,7 +186,7 @@ class GameService {
   async getRound (body){
     const Rounds = this.mongoose.model('Rounds');
 
-    let round = await Rounds.findOne({_id: body.roundID}).populate('blackCard').populate('submittedWhiteCards');
+    let round = await Rounds.findOne({_id: body.roundID}).populate('blackCard').populate('submittedWhiteCards').populate('players');
 
     return round;
   }
