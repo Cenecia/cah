@@ -28,7 +28,8 @@ class GameService {
       players: [ playerOne._id ],
       blackCards: [],
       whiteCards: [],
-      rounds: []
+      rounds: [],
+      czar: -1
     });
 
     blackCardDeck.forEach(b => {
@@ -98,12 +99,18 @@ class GameService {
     const handSize = 8;
 
     let game = await Games.findOne({_id: body.gameID});
+    if(game.czar === game.players.length-1){
+      game.czar = 0;
+    } else {
+      game.czar++;
+    }
     let round = new Rounds({
       players: game.players,
       status: 'submit',
       game: game._id,
       blackCard: game.blackCards[Math.floor(Math.random()*game.blackCards.length)],
-      submittedWhiteCards: []
+      submittedWhiteCards: [],
+      czar: game.players[game.czar]
     });
 
     round = await round.save();

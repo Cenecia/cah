@@ -13,7 +13,8 @@ const roundSchema = new mongoose.Schema({
   status: { type: String },
   game: { type: ObjectId, required: true, ref: "Games" },
   blackCard: { type: ObjectId, required: true, ref: "BlackCards" },
-  submittedWhiteCards: [{ type: ObjectId, required: true, ref: "WhiteCards" }]
+  submittedWhiteCards: [{ type: ObjectId, required: true, ref: "WhiteCards" }],
+  czar: { type: ObjectId, required: true, ref: "Players" }
 });
 
 module.exports = mongoose.model('Rounds', roundSchema);
