@@ -120,7 +120,7 @@ class GameService {
     //Give each player (handSize) white cards
     round.players.forEach(async p => {
       let player = await Players.findOne({_id: p});
-      for (let index = 0; index < handSize; index++) {
+      while(player.hand.length < handSize){
         let whiteCard = game.whiteCards[Math.floor(Math.random()*game.whiteCards.length)];
         player.hand.push(whiteCard);
         game.whiteCards = game.whiteCards.filter(e => e !== whiteCard);
