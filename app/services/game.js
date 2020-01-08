@@ -109,7 +109,7 @@ class GameService {
       status: 'submit',
       game: game._id,
       blackCard: game.blackCards[Math.floor(Math.random()*game.blackCards.length)],
-      submittedWhiteCards: [],
+      candidateCards: [],
       czar: game.players[game.czar]
     });
 
@@ -139,13 +139,21 @@ class GameService {
     const Games = this.mongoose.model('Games');
     const Rounds = this.mongoose.model('Rounds');
     const Players = this.mongoose.model('Players');
+    const WhiteCards = this.mongoose.model('WhiteCards');
 
     let round = await Rounds.findOne({_id: body.roundID});
     if(round.status !== 'submit'){
       return 'All White Cards submitted';
     }
-    round.submittedWhiteCards.push(body.whiteCard);
-    if(round.submittedWhiteCards.length === round.players.length-1){
+
+    let candidateCard = await WhiteCards.findOne({_id:body.whiteCard});
+
+    round.candidateCards.push({
+      player: body.playerID,
+      cards: [candidateCard.text]
+    });
+
+    if(round.candidateCards.length === round.players.length-1){
       round.status = 'select';
     }
     round = await round.save();
@@ -163,7 +171,7 @@ class GameService {
 
     this.log.info('White card submitted.');
 
-    round = await Rounds.findOne({_id: body.roundID}).populate('submittedWhiteCards').populate('blackCard').populate('players');
+    round = await Rounds.findOne({_id: body.roundID}).populate('blackCard').populate('players');
     return round;
   }
   
@@ -171,7 +179,7 @@ class GameService {
   async selectBlackCard (body){
     const Rounds = this.mongoose.model('Rounds');
 
-    let round = await Rounds.findOne({_id: body.roundID}).populate('submittedWhiteCards');
+    let round = await Rounds.findOne({_id: body.roundID});
     round.status = 'closed';
     round = await round.save();
 
@@ -193,7 +201,7 @@ class GameService {
   async getRound (body){
     const Rounds = this.mongoose.model('Rounds');
 
-    let round = await Rounds.findOne({_id: body.roundID}).populate('blackCard').populate('submittedWhiteCards').populate('players');
+    let round = await Rounds.findOne({_id: body.roundID}).populate('blackCard').populate('players');
 
     return round;
   }
