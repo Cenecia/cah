@@ -143,8 +143,19 @@ class GameService {
 
     let round = await Rounds.findOne({_id: body.roundID});
     if(round.status !== 'submit'){
+      this.log.info('All White Cards submitted');
       return 'All White Cards submitted';
     }
+
+    if(round.candidateCards.some(card => card.player == body.playerID)){
+      this.log.info('Already submitted a card');
+      return 'Already submitted a card';
+    }
+
+    // if(submitted.length > 0){
+    //   this.log.info('Already submitted a card');
+    //   return 'Already submitted a card';
+    // }
 
     let candidateCard = await WhiteCards.findOne({_id:body.whiteCard});
 
@@ -163,11 +174,11 @@ class GameService {
     let player = await Players.findOne({_id: body.playerID});
 
     player.hand = player.hand.filter(o => o != body.whiteCard);
-    let newWhiteCard = game.whiteCards[Math.floor(Math.random()*game.whiteCards.length)];
-    player.hand.push(newWhiteCard);
+    // let newWhiteCard = game.whiteCards[Math.floor(Math.random()*game.whiteCards.length)];
+    // player.hand.push(newWhiteCard);
     player = await player.save();
-    game.whiteCards = game.whiteCards.filter(e => e !== newWhiteCard);
-    game = await game.save();
+    //game.whiteCards = game.whiteCards.filter(e => e !== newWhiteCard);
+    //game = await game.save();
 
     this.log.info('White card submitted.');
 
