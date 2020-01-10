@@ -78,12 +78,12 @@ module.exports.register = (server, serviceLocator) => {
 
   server.post(
     {
-      path: '/games/selectBlackCard',
+      path: '/games/selectCandidateCard',
       name: 'Submit White Card',
       version: '1.0.0'
     },
     (req, res, next) => {
-      serviceLocator.get('gameController').selectBlackCard(req, res, next)
+      serviceLocator.get('gameController').selectCandidateCard(req, res, next)
     }
   );
 

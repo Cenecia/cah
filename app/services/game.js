@@ -20,7 +20,8 @@ class GameService {
 
     let playerOne = new Players({
       name: body.player,
-      hand: []
+      hand: [],
+      points: 0
     });
     playerOne = await playerOne.save();
     
@@ -64,7 +65,8 @@ class GameService {
 
     let newPlayer = new Players({
       name: body.player,
-      hand: []
+      hand: [],
+      points: 0
     });
     newPlayer = await newPlayer.save();
     
@@ -152,11 +154,6 @@ class GameService {
       return 'Already submitted a card';
     }
 
-    // if(submitted.length > 0){
-    //   this.log.info('Already submitted a card');
-    //   return 'Already submitted a card';
-    // }
-
     let candidateCard = await WhiteCards.findOne({_id:body.whiteCard});
 
     round.candidateCards.push({
@@ -174,11 +171,7 @@ class GameService {
     let player = await Players.findOne({_id: body.playerID});
 
     player.hand = player.hand.filter(o => o != body.whiteCard);
-    // let newWhiteCard = game.whiteCards[Math.floor(Math.random()*game.whiteCards.length)];
-    // player.hand.push(newWhiteCard);
     player = await player.save();
-    //game.whiteCards = game.whiteCards.filter(e => e !== newWhiteCard);
-    //game = await game.save();
 
     this.log.info('White card submitted.');
 
@@ -186,11 +179,16 @@ class GameService {
     return round;
   }
   
-  //games/selectBlackCard
-  async selectBlackCard (body){
+  //games/selectCandidateCard
+  async selectCandidateCard (body){
     const Rounds = this.mongoose.model('Rounds');
 
-    let round = await Rounds.findOne({_id: body.roundID});
+    let round = await Rounds.findOne({_id: body.roundID}).populate('players');
+    round.players.forEach(player => {
+      if(player._id == body.player){
+        player.points++;
+      }
+    });
     round.status = 'closed';
     round = await round.save();
 

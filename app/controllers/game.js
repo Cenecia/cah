@@ -83,11 +83,11 @@ class GameController {
     }
   }
 
-  //selectBlackCard
-  async selectBlackCard(req, res) {
+  //selectCandidateCard
+  async selectCandidateCard(req, res) {
     try {
       const {body} = req;
-      const result = await this.gameService.selectBlackCard(body);
+      const result = await this.gameService.selectCandidateCard(body);
 
       res.send(result);
     } catch (err) {
