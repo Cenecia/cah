@@ -193,10 +193,15 @@ class GameService {
         updatePlayer = updatePlayer.save();
       }
     });
+    round.candidateCards.forEach(candidate => {
+      if(candidate.player == body.player){
+        candidate.winner = true;
+      }
+    });
     round.status = 'closed';
     round = await round.save();
 
-    this.log.info('Black Card Selected.');
+    this.log.info('Winning Card Selected.');
     return round;
   }
 

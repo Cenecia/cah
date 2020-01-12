@@ -10,7 +10,8 @@ const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const candidateCardSchema = new mongoose.Schema({
   player: { type: ObjectId, required: true, ref: "Players" },
-  cards: [{ type: String }]
+  cards: [{ type: String }],
+  winner: { type: Boolean, default: false }
 });
 
 const roundSchema = new mongoose.Schema({
