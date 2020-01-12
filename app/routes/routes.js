@@ -1,7 +1,14 @@
 'use strict';
 
+
+
 module.exports.register = (server, serviceLocator) => {
 
+  const io = require('socket.io')({
+    path: '/test',
+    serveClient: false,
+  });
+  
   server.post(
     {
       path: '/games/new',
@@ -73,6 +80,18 @@ module.exports.register = (server, serviceLocator) => {
     },
     (req, res, next) => {
       serviceLocator.get('gameController').getRound(req, res, next)
+    }
+  );
+
+  //getLatestRound
+  server.post(
+    {
+      path: '/games/getLatestRound',
+      name: 'Get latest round in a game',
+      version: '1.0.0'
+    },
+    (req, res, next) => {
+      serviceLocator.get('gameController').getLatestRound(req, res, next)
     }
   );
 

@@ -83,6 +83,19 @@ class GameController {
     }
   }
 
+  //getLatestRound
+  async getLatestRound(req, res) {
+    try {
+      const {body} = req;
+      const result = await this.gameService.getLatestRound(body);
+
+      res.send(result);
+    } catch (err) {
+      this.log.error(err.message);
+      res.send(err);
+    }
+  }
+
   //selectCandidateCard
   async selectCandidateCard(req, res) {
     try {

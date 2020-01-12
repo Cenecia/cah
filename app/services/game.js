@@ -182,11 +182,15 @@ class GameService {
   //games/selectCandidateCard
   async selectCandidateCard (body){
     const Rounds = this.mongoose.model('Rounds');
+    const Players = this.mongoose.model('Players');
 
     let round = await Rounds.findOne({_id: body.roundID}).populate('players');
-    round.players.forEach(player => {
+    round.players.forEach(async player => {
       if(player._id == body.player){
         player.points++;
+        let updatePlayer = await Players.findOne({_id: body.player}).populate('hand');
+        updatePlayer.points++;
+        updatePlayer = updatePlayer.save();
       }
     });
     round.status = 'closed';
@@ -211,6 +215,27 @@ class GameService {
     const Rounds = this.mongoose.model('Rounds');
 
     let round = await Rounds.findOne({_id: body.roundID}).populate('blackCard').populate('players');
+
+    return round;
+  }
+
+  //games/getLatestRound
+  async getLatestRound (body){
+    const Rounds = this.mongoose.model('Rounds');
+    const Games = this.mongoose.model('Games');
+    let game = await Games.findOne({_id: body.gameID});
+    let latestRoundId = game.rounds[game.rounds.length - 1];
+    let round = await Rounds.findOne({ _id: latestRoundId }).populate('blackCard').populate('players');
+
+    /*
+    User.findOne({$or: [
+        {email: req.body.email},
+        {phone: req.body.phone}
+    ]}).exec(function(err, user){
+        if (user) {} //user already exists with email AND/OR phone.
+        else {} //no users with that email NOR phone exist.
+    });
+    */
 
     return round;
   }
