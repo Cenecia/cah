@@ -128,10 +128,11 @@ class GameService {
         game.whiteCards = game.whiteCards.filter(e => e !== whiteCard);
       }
       player = await player.save();
+      game = await game.save();
     });
     
-    game = await game.save();
-    round = Rounds.findOne({_id: round._id}).populate('blackCard').populate('players');
+    
+    round = Rounds.findOne({_id: round._id}).populate('blackCard').populate('players').populate('game');
 
     return round;
   }
@@ -154,11 +155,18 @@ class GameService {
       return 'Already submitted a card';
     }
 
-    let candidateCard = await WhiteCards.findOne({_id:body.whiteCard});
+    var candidateCards = [];
+    
+    for (let index = 0; index < body.whiteCards.length; index++) {
+      let candidateCard = await WhiteCards.findOne({_id:body.whiteCards[index]});
+      candidateCards.push(candidateCard.text);
+    }
+
+    this.log.info(candidateCards);
 
     round.candidateCards.push({
       player: body.playerID,
-      cards: [candidateCard.text]
+      cards: candidateCards
     });
 
     if(round.candidateCards.length === round.players.length-1){
@@ -170,12 +178,14 @@ class GameService {
 
     let player = await Players.findOne({_id: body.playerID});
 
-    player.hand = player.hand.filter(o => o != body.whiteCard);
-    player = await player.save();
+    body.whiteCards.forEach(async whiteCard => {
+      player.hand = player.hand.filter(o => o != whiteCard);
+      player = await player.save();
+    });
 
     this.log.info('White card submitted.');
 
-    round = await Rounds.findOne({_id: body.roundID}).populate('blackCard').populate('players');
+    round = await Rounds.findOne({_id: body.roundID}).populate('blackCard').populate('players').populate('game');
     return round;
   }
   
@@ -184,7 +194,7 @@ class GameService {
     const Rounds = this.mongoose.model('Rounds');
     const Players = this.mongoose.model('Players');
 
-    let round = await Rounds.findOne({_id: body.roundID}).populate('players');
+    let round = await Rounds.findOne({_id: body.roundID}).populate('players').populate('game');
     round.players.forEach(async player => {
       if(player._id == body.player){
         player.points++;
@@ -219,7 +229,7 @@ class GameService {
   async getRound (body){
     const Rounds = this.mongoose.model('Rounds');
 
-    let round = await Rounds.findOne({_id: body.roundID}).populate('blackCard').populate('players');
+    let round = await Rounds.findOne({_id: body.roundID}).populate('blackCard').populate('players').populate('game');
 
     return round;
   }
@@ -230,7 +240,7 @@ class GameService {
     const Games = this.mongoose.model('Games');
     let game = await Games.findOne({_id: body.gameID});
     let latestRoundId = game.rounds[game.rounds.length - 1];
-    let round = await Rounds.findOne({ _id: latestRoundId }).populate('blackCard').populate('players');
+    let round = await Rounds.findOne({ _id: latestRoundId }).populate('blackCard').populate('players').populate('game');
 
     /*
     User.findOne({$or: [
