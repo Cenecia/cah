@@ -39,6 +39,17 @@ module.exports.register = (server, serviceLocator) => {
 
   server.post(
     {
+      path: '/games/getGame',
+      name: 'Get Game',
+      version: '1.0.0'
+    },
+    (req, res, next) => {
+      serviceLocator.get('gameController').getGame(req, res, next)
+    }
+  );
+
+  server.post(
+    {
       path: '/games/startRound',
       name: 'Start New Round',
       version: '1.0.0'

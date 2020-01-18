@@ -31,6 +31,18 @@ class GameController {
     }
   }
 
+  async getGame(req, res) {
+    try {
+      const {body} = req;
+      const result = await this.gameService.getGame(body);
+
+      res.send(result);
+    } catch (err) {
+      this.log.error(err.message);
+      res.send(err);
+    }
+  }
+
   //startRound
   async startRound(req, res) {
     try {

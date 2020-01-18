@@ -92,6 +92,14 @@ class GameService {
     return returnMe;
   }
 
+  async getGame(body){
+    const Games = this.mongoose.model('Games');
+   
+    let game = await Games.findOne({_id: body.gameID}).populate('players');
+    
+    return game;
+  }
+
   //games/startRound
   async startRound(body) {
     const Games = this.mongoose.model('Games');
