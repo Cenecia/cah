@@ -4,11 +4,6 @@
 
 module.exports.register = (server, serviceLocator) => {
 
-  const io = require('socket.io')({
-    path: '/test',
-    serveClient: false,
-  });
-  
   server.post(
     {
       path: '/games/new',
