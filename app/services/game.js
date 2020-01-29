@@ -136,9 +136,8 @@ class GameService {
         game.whiteCards = game.whiteCards.filter(e => e !== whiteCard);
       }
       player = await player.save();
-      game = await game.save();
     });
-    
+    game = await game.save();
     
     round = Rounds.findOne({_id: round._id}).populate('blackCard').populate('players').populate('game');
 
@@ -188,8 +187,8 @@ class GameService {
 
     body.whiteCards.forEach(async whiteCard => {
       player.hand = player.hand.filter(o => o != whiteCard);
-      player = await player.save();
     });
+    player = await player.save();
 
     this.log.info('White card submitted.');
 
@@ -203,23 +202,25 @@ class GameService {
     const Players = this.mongoose.model('Players');
 
     let round = await Rounds.findOne({_id: body.roundID}).populate('players').populate('game');
-    round.players.forEach(async player => {
-      if(player._id == body.player){
-        player.points++;
-        let updatePlayer = await Players.findOne({_id: body.player}).populate('hand');
-        updatePlayer.points++;
-        updatePlayer = updatePlayer.save();
-      }
-    });
-    round.candidateCards.forEach(candidate => {
-      if(candidate.player == body.player){
-        candidate.winner = true;
-      }
-    });
-    round.status = 'closed';
-    round = await round.save();
+    if(round.status == 'select'){
+      round.players.forEach(async player => {
+        if(player._id == body.player){
+          player.points++;
+          let updatePlayer = await Players.findOne({_id: body.player}).populate('hand');
+          updatePlayer.points++;
+          updatePlayer = updatePlayer.save();
+        }
+      });
+      round.candidateCards.forEach(candidate => {
+        if(candidate.player == body.player){
+          candidate.winner = true;
+        }
+      });
+      round.status = 'closed';
+      round = await round.save();
 
-    this.log.info('Winning Card Selected.');
+      this.log.info('Winning Card Selected.');
+    }
     return round;
   }
 
