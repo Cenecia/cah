@@ -30,7 +30,8 @@ class GameService {
       blackCards: [],
       whiteCards: [],
       rounds: [],
-      czar: -1
+      czar: -1,
+      owner: playerOne._id
     });
 
     blackCardDeck.forEach(b => {
@@ -48,11 +49,12 @@ class GameService {
       whiteCardCount: newGame.whiteCards.length,
       blackCardCount: newGame.blackCards.length,
       gameID: newGame._id,
-      players: newGame.players
+      players: newGame.players,
+      owner: newGame.owner
     };
 
     this.log.info('New game created.');
-    this.log.info(returnMe);
+    //this.log.info(returnMe);
 
     return returnMe;
   }
@@ -83,11 +85,12 @@ class GameService {
       gameID: game._id,
       players: game.players,
       rounds: game.rounds,
-      latestRound: latestRound
+      latestRound: latestRound,
+      owner: game.owner
     };
 
-    this.log.info('Player joined game.');
-    this.log.info(returnMe);
+    this.log.info(`Player (${newPlayer.name}) joined game.`);
+    //this.log.info(returnMe);
 
     return returnMe;
   }
@@ -169,7 +172,7 @@ class GameService {
       candidateCards.push(candidateCard.text);
     }
 
-    this.log.info(candidateCards);
+    //this.log.info(candidateCards);
 
     round.candidateCards.push({
       player: body.playerID,
@@ -229,7 +232,7 @@ class GameService {
     const Players = this.mongoose.model('Players');
 
     let player = await Players.findOne({_id: body.playerID}).populate('hand');
-    this.log.info(player);
+    //this.log.info(player);
 
     return player;
   }
@@ -251,17 +254,22 @@ class GameService {
     let latestRoundId = game.rounds[game.rounds.length - 1];
     let round = await Rounds.findOne({ _id: latestRoundId }).populate('blackCard').populate('players').populate('game');
 
-    /*
-    User.findOne({$or: [
-        {email: req.body.email},
-        {phone: req.body.phone}
-    ]}).exec(function(err, user){
-        if (user) {} //user already exists with email AND/OR phone.
-        else {} //no users with that email NOR phone exist.
-    });
-    */
-
     return round;
+  }
+
+  async removePlayer(body){
+    const Games = this.mongoose.model('Games');
+    const Rounds = this.mongoose.model('Rounds');
+    let game = await Games.findOne({_id: body.gameID});
+    game.players = game.players.filter(p => p != body.playerID);
+    game = await game.save();
+
+    if(game.rounds.length > 0){
+      let latestRoundId = game.rounds[game.rounds.length - 1];
+      let round = await Rounds.findOne({ _id: latestRoundId });
+      round.players = round.players.filter(p => p != body.playerID);
+      round = await round.save();
+    }
   }
 
   async parseGame() {
