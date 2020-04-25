@@ -111,6 +111,18 @@ module.exports.register = (server, serviceLocator) => {
       serviceLocator.get('gameController').selectCandidateCard(req, res, next)
     }
   );
+  
+  server.get(
+    {
+      path: '/test/test',
+      name: 'Parse Sets from API',
+      version: '1.0.0'
+    },
+    (req, res, next) => {
+      //serviceLocator.get('gameController').parse(req, res, next);
+      return "Test!";
+    }
+  );
 
   server.get(
     {
