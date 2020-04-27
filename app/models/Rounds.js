@@ -22,7 +22,8 @@ const roundSchema = new mongoose.Schema({
   blackCard: { type: ObjectId, required: true, ref: "BlackCards" },
   candidateCards: [candidateCardSchema],
   czar: { type: ObjectId, required: true, ref: "Players" },
-  winner: { type: ObjectId, required: false, ref: "Players" }
+  winner: { type: ObjectId, required: false, ref: "Players" },
+  startTime: { type: Date }
 });
 
 module.exports = mongoose.model('Rounds', roundSchema);

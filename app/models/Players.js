@@ -14,7 +14,8 @@ const ObjectId = mongoose.Schema.Types.ObjectId;
 const playerSchema = new mongoose.Schema({
   name: { type: String, required: true },
   hand: [{ type: ObjectId, required: true, ref: "WhiteCards" }],
-  points: { type: Number }
+  points: { type: Number },
+  active: { type: Boolean }
 });
 
 module.exports = mongoose.model('Players', playerSchema);

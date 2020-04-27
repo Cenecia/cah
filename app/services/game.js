@@ -120,10 +120,13 @@ class GameService {
       game: game._id,
       blackCard: game.blackCards[Math.floor(Math.random()*game.blackCards.length)],
       candidateCards: [],
-      czar: game.players[game.czar]
+      czar: game.players[game.czar],
+      startTime: new Date()
     });
 
     round = await round.save();
+    //this.log.info(round.startTime);
+    
     game.rounds.push(round);
     game.blackCards = game.blackCards.filter(e => e._id !== round.blackCard);
 
@@ -152,45 +155,59 @@ class GameService {
     const WhiteCards = this.mongoose.model('WhiteCards');
 
     let round = await Rounds.findOne({_id: body.roundID});
+    
     if(round.status !== 'submit'){
+      //They somehow submitted a card after all cards were submitted
       this.log.info('All White Cards submitted');
       return 'All White Cards submitted';
     }
 
     if(round.candidateCards.some(card => card.player == body.playerID)){
+      //They somehow submitted a 
       this.log.info('Already submitted a card');
       return 'Already submitted a card';
     }
 
     var candidateCards = [];
     
+    //Get the white cards and add the text as a candidate card
     for (let index = 0; index < body.whiteCards.length; index++) {
       let candidateCard = await WhiteCards.findOne({_id:body.whiteCards[index]});
       candidateCards.push(candidateCard.text);
     }
 
-    this.log.info(candidateCards);
+    //this.log.info(candidateCards);
 
+    //Add the candidate cards to the round, tied to the player
     round.candidateCards.push({
       player: body.playerID,
       cards: candidateCards
     });
 
-    if(round.candidateCards.length === round.players.length-1){
-      round.status = 'select';
-    }
-    round = await round.save();
-
     let game = await Games.findOne({_id: round.game});
 
     let player = await Players.findOne({_id: body.playerID});
 
+    //remove the submitted white cards from the player's hand
     body.whiteCards.forEach(async whiteCard => {
       player.hand = player.hand.filter(o => o != whiteCard);
     });
+    
+    //If they were inactive, they are active now
+    player.active = true;
+    
     player = await player.save();
 
-    this.log.info('White card submitted.');
+//     let now = new Date();
+//     if((now - round.startTime) > 300000){
+//       //Round time limit expired
+//       //game.players.forEach()
+//       round.status = 'select';
+//     }
+    if(round.candidateCards.length === round.players.length-1){
+      round.status = 'select';
+    }
+    round = await round.save();
 
     round = await Rounds.findOne({_id: body.roundID}).populate('blackCard').populate('players').populate('game');
     return round;
@@ -239,8 +256,11 @@ class GameService {
   //games/getRound
   async getRound (body){
     const Rounds = this.mongoose.model('Rounds');
+    let now = new Date();
 
     let round = await Rounds.findOne({_id: body.roundID}).populate('blackCard').populate('players').populate('game').populate('winner');
+    let diff = now - round.startTime;
+    //this.log.info(diff);
 
     return round;
   }
@@ -253,19 +273,15 @@ class GameService {
     let game = await Games.findOne({_id: body.gameID});
     let latestRoundId = game.rounds[game.rounds.length - 1];
     let round = await Rounds.findOne({ _id: latestRoundId }).populate('blackCard').populate('players').populate('game').populate('winner');
-//     round.candidateCards.forEach(async cc => {
-//       cc.playerName = await Rounds.findOne({ _id: latestRoundId }).populate('blackCard').populate('players').populate('game');
-//     });
-
-    /*
-    User.findOne({$or: [
-        {email: req.body.email},
-        {phone: req.body.phone}
-    ]}).exec(function(err, user){
-        if (user) {} //user already exists with email AND/OR phone.
-        else {} //no users with that email NOR phone exist.
-    });
-    */
+    
+    //Check if round timed out
+    let now = new Date();
+    let diff = now - round.startTime;
+    //8,090,029
+    if(round.status == "submit" && diff > 300000){
+      round.status = 'select';
+      round = await round.save();
+    }
 
     return round;
   }
