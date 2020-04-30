@@ -21,7 +21,8 @@ class GameService {
     let playerOne = new Players({
       name: body.player,
       hand: [],
-      points: 0
+      points: 0,
+      active: true
     });
     playerOne = await playerOne.save();
     
@@ -52,7 +53,7 @@ class GameService {
     };
 
     this.log.info('New game created.');
-    this.log.info(returnMe);
+    //this.log.info(returnMe);
 
     return returnMe;
   }
@@ -66,7 +67,8 @@ class GameService {
     let newPlayer = new Players({
       name: body.player,
       hand: [],
-      points: 0
+      points: 0,
+      active: true
     });
     newPlayer = await newPlayer.save();
     
@@ -86,8 +88,8 @@ class GameService {
       latestRound: latestRound
     };
 
-    this.log.info('Player joined game.');
-    this.log.info(returnMe);
+    this.log.info(newPlayer.name+' joined game.');
+    //this.log.info(returnMe);
 
     return returnMe;
   }
@@ -154,7 +156,7 @@ class GameService {
     const Players = this.mongoose.model('Players');
     const WhiteCards = this.mongoose.model('WhiteCards');
 
-    let round = await Rounds.findOne({_id: body.roundID});
+    let round = await Rounds.findOne({_id: body.roundID}).populate('players');
     
     if(round.status !== 'submit'){
       //They somehow submitted a card after all cards were submitted
@@ -172,11 +174,10 @@ class GameService {
     
     //Get the white cards and add the text as a candidate card
     for (let index = 0; index < body.whiteCards.length; index++) {
+      this.log.info('White card submitted');
       let candidateCard = await WhiteCards.findOne({_id:body.whiteCards[index]});
       candidateCards.push(candidateCard.text);
     }
-
-    //this.log.info(candidateCards);
 
     //Add the candidate cards to the round, tied to the player
     round.candidateCards.push({
@@ -198,13 +199,14 @@ class GameService {
     
     player = await player.save();
 
-//     let now = new Date();
-//     if((now - round.startTime) > 300000){
-//       //Round time limit expired
-//       //game.players.forEach()
-//       round.status = 'select';
-//     }
-    if(round.candidateCards.length === round.players.length-1){
+    let allCardsSubmitted = true;
+    //Loop through every active player who isn't the czar
+    round.players.filter(p => p.active && p._id.toString() != round.czar.toString()).forEach(async p => {
+        //Check if each player in the loop has submitted a card. One false here will falsify the rest
+       allCardsSubmitted = allCardsSubmitted && round.candidateCards.some(c => c.player.toString() == p._id.toString());
+    });
+    if(allCardsSubmitted){
+      this.log.info('All active players submitted card. Next phase');
       round.status = 'select';
     }
     round = await round.save();
@@ -248,7 +250,7 @@ class GameService {
     const Players = this.mongoose.model('Players');
 
     let player = await Players.findOne({_id: body.playerID}).populate('hand');
-    this.log.info(player);
+    //this.log.info(player);
 
     return player;
   }
@@ -259,8 +261,6 @@ class GameService {
     let now = new Date();
 
     let round = await Rounds.findOne({_id: body.roundID}).populate('blackCard').populate('players').populate('game').populate('winner');
-    let diff = now - round.startTime;
-    //this.log.info(diff);
 
     return round;
   }
@@ -269,16 +269,28 @@ class GameService {
   async getLatestRound (body){
     const Rounds = this.mongoose.model('Rounds');
     const Games = this.mongoose.model('Games');
+    const Players = this.mongoose.model('Players');
     //const Games = this.mongoose.model('Players');
     let game = await Games.findOne({_id: body.gameID});
     let latestRoundId = game.rounds[game.rounds.length - 1];
+    
+    //Need to figure out a way to include candidateCards here
     let round = await Rounds.findOne({ _id: latestRoundId }).populate('blackCard').populate('players').populate('game').populate('winner');
     
     //Check if round timed out
     let now = new Date();
     let diff = now - round.startTime;
-    //8,090,029
+    
     if(round.status == "submit" && diff > 300000){
+      let inactives = [];
+      this.log.info('Time limit hit. Next phase');
+      this.log.info(round.players);
+      this.log.info(round.candidateCards);
+      round.players.filter(p => p._id.toString() != round.czar.toString()).forEach(async p => {
+        let player = await Players.findOne({ _id: p._id });
+        player.active = round.candidateCards.some(c => c.player.toString() == p._id.toString());
+        player = await player.save();
+      });
       round.status = 'select';
       round = await round.save();
     }
