@@ -111,6 +111,7 @@ class GameService {
     const handSize = 8;
 
     let game = await Games.findOne({_id: body.gameID}).populate('players');
+    
     do {
       if(game.czar === game.players.length-1){
         game.czar = 0;
@@ -118,6 +119,7 @@ class GameService {
         game.czar++;
       }
     } while (!game.players[game.czar].active);
+    
     let round = new Rounds({
       players: game.players,
       status: 'submit',
@@ -133,18 +135,39 @@ class GameService {
     
     game.rounds.push(round);
     game.blackCards = game.blackCards.filter(e => e._id !== round.blackCard);
+    
+    //Count white cards we need to distribute
+    let newWhiteCardCount = 0;
+    round.players.forEach(p => {
+      newWhiteCardCount += handSize - p.hand.length;
+    });
+    
+    let newWhiteCards = [];
+    let possibleWhiteCards = [];
+    
+    //Take the number of white cards we need out of the game's whitecard deck
+    for (var index = 0; index < newWhiteCardCount; index++) {
+      possibleWhiteCards = game.whiteCards.filter(wc => !newWhiteCards.some(nwc => nwc == wc));
+      this.log.info(`possibleWhiteCards IN LOOP: ${possibleWhiteCards.length}`);
+      newWhiteCards.push(possibleWhiteCards[Math.floor(Math.random()*possibleWhiteCards.length)]);
+    }
+    
+    //newWhiteCards is now all the cards we will give back to players
+    //possibleWhiteCards is all the remaining whitecards in the deck
+    game.whiteCards = possibleWhiteCards.filter(wc => !newWhiteCards.some(nwc => nwc == wc));
+    this.log.info(`game.whitecards: ${game.whiteCards.length} possibleWhiteCards: ${possibleWhiteCards.length} newWhiteCards: ${newWhiteCards.length}`);
+    game = await game.save();
 
     //Give each player (handSize) white cards
     round.players.forEach(async p => {
       let player = await Players.findOne({_id: p});
       while(player.hand.length < handSize){
-        let whiteCard = game.whiteCards[Math.floor(Math.random()*game.whiteCards.length)];
+        let whiteCard = newWhiteCards[Math.floor(Math.random()*newWhiteCards.length)];
         player.hand.push(whiteCard);
-        game.whiteCards = game.whiteCards.filter(e => e !== whiteCard);
+        newWhiteCards = newWhiteCards.filter(e => e !== whiteCard);
       }
       player = await player.save();
     });
-    game = await game.save();
     
     round = Rounds.findOne({_id: round._id}).populate('blackCard').populate('players').populate('game');
 
@@ -286,8 +309,7 @@ class GameService {
     if(round.status == "submit" && diff > 300000){
       let inactives = [];
       this.log.info('Time limit hit. Next phase');
-      this.log.info(round.players);
-      this.log.info(round.candidateCards);
+
       round.players.filter(p => p._id.toString() != round.czar.toString()).forEach(async p => {
         let player = await Players.findOne({ _id: p._id });
         player.active = round.candidateCards.some(c => c.player.toString() == p._id.toString());
