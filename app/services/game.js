@@ -112,6 +112,15 @@ class GameService {
 
     let game = await Games.findOne({_id: body.gameID}).populate('players');
     
+    //Make sure the game has no rounds, or the latest round is 'closed'
+    let latestRoundId = game.rounds[game.rounds.length - 1];
+    
+    let latestRound = await Rounds.findOne({ _id: latestRoundId });
+    if(latestRound && latestRound.status != 'closed'){
+      this.log.info('Cannot start next round. Current round incomplete');
+      return;
+    }
+    
     do {
       if(game.czar === game.players.length-1){
         game.czar = 0;
