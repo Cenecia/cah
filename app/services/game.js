@@ -15,8 +15,12 @@ class GameService {
     const BlackCards = this.mongoose.model('BlackCards');
     const WhiteCards = this.mongoose.model('WhiteCards');
     
-    let blackCardDeck = await BlackCards.find();
-    let whiteCardDeck = await WhiteCards.find();
+    //this.log.info(body.sets);
+    //return;
+    let sets = body.sets;
+    
+    let blackCardDeck = await BlackCards.find({ set: { $in: sets } });
+    let whiteCardDeck = await WhiteCards.find({ set: { $in: sets } });
 
     let playerOne = new Players({
       name: body.player,
@@ -53,7 +57,7 @@ class GameService {
     };
 
     this.log.info('New game created.');
-    //this.log.info(returnMe);
+    this.log.info(returnMe);
 
     return returnMe;
   }
@@ -329,6 +333,106 @@ class GameService {
     }
 
     return round;
+  }
+  
+  async getAllSets(){
+    const Sets = this.mongoose.model('Sets');
+    const BlackCards = this.mongoose.model('BlackCards');
+    const WhiteCards = this.mongoose.model('WhiteCards');
+    
+    let blackCardDeck = await BlackCards.find().populate('set');
+    let whiteCardDeck = await WhiteCards.find().populate('set');
+    
+    let sets = [];
+    
+    blackCardDeck.forEach(bc => {
+      if(!sets.some(s => s.id.toString() == bc.set._id.toString())){
+        sets.push({
+          id: bc.set._id.toString(),
+          name: bc.set.name,
+          blackCardCount: 1,
+          whiteCardCount: 0
+        })
+      } else {
+        sets.find(s => s.id.toString() == bc.set._id.toString()).blackCardCount++;
+      }
+    });
+    
+    whiteCardDeck.forEach(wc => {
+      if(!sets.some(s => s.id.toString() == wc.set._id.toString())){
+        sets.push({
+          id: wc.set._id.toString(),
+          name: wc.set.name,
+          blackCardCount: 0,
+          whiteCardCount: 1
+        })
+      } else {
+        sets.find(s => s.id.toString() == wc.set._id.toString()).whiteCardCount++;
+        //sets.find(s => s.name == wc.set.name).wcid = wc.set._id;
+      }
+    });
+    
+    //this.log.info(sets);
+    
+    return sets;
+    
+//     await Sets.find({}, function (err, docs){
+//       docs.forEach(async sl => {
+//         let blackCardCount = await BlackCards.estimatedDocumentCount({ set: sl._id });
+//         docs.test = blackCardCount;
+//       });
+//       console.log(docs);
+//     });
+    
+    //this.log.info(setList);
+    
+//     let returnSets = [];
+    
+//     setList.forEach(async sl => {
+//       let blackCardCount = await BlackCards.estimatedDocumentCount({ set: sl._id });
+//       let whiteCardCount = await WhiteCards.estimatedDocumentCount({ set: sl._id });
+//       sl.whiteCardCount = whiteCardCount;
+// //       this.log.info({
+// //           name: sl.name,
+// //           id: sl._id,
+// //           blackCards: blackCardCount,
+// //           whiteCards: whiteCardCount
+// //         });
+// //       returnSets.push(
+// //         {
+// //           name: sl.name,
+// //           id: sl._id,
+// //           blackCards: blackCardCount,
+// //           whiteCards: whiteCardCount
+// //         }
+// //       )
+//     });
+    
+//     //this.log.info(returnSets);
+    
+//     return setList;
+  }
+  
+  async getAllCards(){
+    const BlackCards = this.mongoose.model('BlackCards');
+    const WhiteCards = this.mongoose.model('WhiteCards');
+    
+    let sets = ["5ea262f38ff879045230f611","5ea262f38ff879045230f610"];
+    
+    let blackCardDeck = await BlackCards.find().populate('set');
+    let whiteCardDeck = await WhiteCards.find({ set: { $in: sets } }).populate('set');
+    
+    let filteredWhiteCards = [];
+    whiteCardDeck.forEach(card => {
+      if(!filteredWhiteCards.some(c => c.text == card.text)){
+        filteredWhiteCards.push(card);
+      }
+    });
+    
+    return {
+      whiteCardDeck: filteredWhiteCards,
+      blackCardDeck: blackCardDeck
+    }
   }
 
   async parseGame() {
