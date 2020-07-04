@@ -18,6 +18,7 @@ class GameService {
     //this.log.info(body.sets);
     //return;
     let sets = body.sets;
+    let timeLimit = body.time_limit * 60 * 1000;
     
     let blackCardDeck = await BlackCards.find({ set: { $in: sets } });
     let whiteCardDeck = await WhiteCards.find({ set: { $in: sets } });
@@ -35,7 +36,8 @@ class GameService {
       blackCards: [],
       whiteCards: [],
       rounds: [],
-      czar: -1
+      czar: -1,
+      timeLimit: timeLimit
     });
 
     blackCardDeck.forEach(b => {
@@ -319,7 +321,7 @@ class GameService {
     let now = new Date();
     let diff = now - round.startTime;
     
-    if(round.status == "submit" && diff > 300000){
+    if(round.status == "submit" && diff > game.timeLimit){
       let inactives = [];
       this.log.info('Time limit hit. Next phase');
 

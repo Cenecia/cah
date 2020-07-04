@@ -19,7 +19,8 @@ const gameSchema = new mongoose.Schema({
   whiteCards: [{ type: ObjectId, required: true, ref: "WhiteCards" }],
   blackCards: [{ type: ObjectId, required: true, ref: "BlackCards" }],
   rounds: [{ type: ObjectId, required: true, ref: "Rounds" }],
-  czar: Number
+  czar: Number,
+  timeLimit: Number
 });
 
 module.exports = mongoose.model('Games', gameSchema);
