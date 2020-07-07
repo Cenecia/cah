@@ -15,10 +15,9 @@ class GameService {
     const BlackCards = this.mongoose.model('BlackCards');
     const WhiteCards = this.mongoose.model('WhiteCards');
     
-    //this.log.info(body.sets);
-    //return;
     let sets = body.sets;
     let timeLimit = body.time_limit * 60 * 1000;
+    let scoreLimit = body.score_limit;
     
     let blackCardDeck = await BlackCards.find({ set: { $in: sets } });
     let whiteCardDeck = await WhiteCards.find({ set: { $in: sets } });
@@ -37,7 +36,8 @@ class GameService {
       whiteCards: [],
       rounds: [],
       czar: -1,
-      timeLimit: timeLimit
+      timeLimit: timeLimit,
+      scoreLimit: scoreLimit
     });
 
     blackCardDeck.forEach(b => {
@@ -59,7 +59,7 @@ class GameService {
     };
 
     this.log.info('New game created.');
-    this.log.info(returnMe);
+    this.log.info(newGame.scoreLimit);
 
     return returnMe;
   }
@@ -95,7 +95,6 @@ class GameService {
     };
 
     this.log.info(newPlayer.name+' joined game.');
-    //this.log.info(returnMe);
 
     return returnMe;
   }
@@ -120,10 +119,11 @@ class GameService {
     
     //Make sure the game has no rounds, or the latest round is 'closed'
     let latestRoundId = game.rounds[game.rounds.length - 1];
+    this.log.info(game.winner);
     
     let latestRound = await Rounds.findOne({ _id: latestRoundId });
-    if(latestRound && latestRound.status != 'closed'){
-      this.log.info('Cannot start next round. Current round incomplete');
+    if((latestRound && latestRound.status != 'closed' || game.winner)){
+      this.log.info('Cannot start next round.');
       return;
     }
     
@@ -146,7 +146,6 @@ class GameService {
     });
 
     round = await round.save();
-    //this.log.info(round.startTime);
     
     game.rounds.push(round);
     game.blackCards = game.blackCards.filter(e => e._id !== round.blackCard);
@@ -163,14 +162,12 @@ class GameService {
     //Take the number of white cards we need out of the game's whitecard deck
     for (var index = 0; index < newWhiteCardCount; index++) {
       possibleWhiteCards = game.whiteCards.filter(wc => !newWhiteCards.some(nwc => nwc == wc));
-      this.log.info(`possibleWhiteCards IN LOOP: ${possibleWhiteCards.length}`);
       newWhiteCards.push(possibleWhiteCards[Math.floor(Math.random()*possibleWhiteCards.length)]);
     }
     
     //newWhiteCards is now all the cards we will give back to players
     //possibleWhiteCards is all the remaining whitecards in the deck
     game.whiteCards = possibleWhiteCards.filter(wc => !newWhiteCards.some(nwc => nwc == wc));
-    this.log.info(`game.whitecards: ${game.whiteCards.length} possibleWhiteCards: ${possibleWhiteCards.length} newWhiteCards: ${newWhiteCards.length}`);
     game = await game.save();
 
     //Give each player (handSize) white cards
@@ -259,8 +256,11 @@ class GameService {
   async selectCandidateCard (body){
     const Rounds = this.mongoose.model('Rounds');
     const Players = this.mongoose.model('Players');
+    const Games = this.mongoose.model('Games');
 
-    let round = await Rounds.findOne({_id: body.roundID}).populate('players').populate('game');
+    let round = await Rounds.findOne({_id: body.roundID}).populate('players');
+    this.log.info(round);
+    let game = await Games.findOne({_id: round.game });
     if(round.status == 'select'){
       round.players.forEach(async player => {
         if(player._id == body.player){
@@ -268,6 +268,11 @@ class GameService {
           let updatePlayer = await Players.findOne({_id: body.player}).populate('hand');
           updatePlayer.points++;
           updatePlayer = updatePlayer.save();
+          if(player.points >= game.scoreLimit){
+            this.log.info("Game over - Winner "+player.name);
+            game.winner = player._id;
+            game = await game.save();
+          }
         }
       });
       round.candidateCards.forEach(candidate => {
@@ -310,7 +315,6 @@ class GameService {
     const Rounds = this.mongoose.model('Rounds');
     const Games = this.mongoose.model('Games');
     const Players = this.mongoose.model('Players');
-    //const Games = this.mongoose.model('Players');
     let game = await Games.findOne({_id: body.gameID});
     let latestRoundId = game.rounds[game.rounds.length - 1];
     
@@ -370,49 +374,45 @@ class GameService {
         })
       } else {
         sets.find(s => s.id.toString() == wc.set._id.toString()).whiteCardCount++;
-        //sets.find(s => s.name == wc.set.name).wcid = wc.set._id;
       }
     });
     
-    //this.log.info(sets);
-    
     return sets;
-    
-//     await Sets.find({}, function (err, docs){
-//       docs.forEach(async sl => {
-//         let blackCardCount = await BlackCards.estimatedDocumentCount({ set: sl._id });
-//         docs.test = blackCardCount;
-//       });
-//       console.log(docs);
-//     });
-    
-    //this.log.info(setList);
-    
-//     let returnSets = [];
-    
-//     setList.forEach(async sl => {
-//       let blackCardCount = await BlackCards.estimatedDocumentCount({ set: sl._id });
-//       let whiteCardCount = await WhiteCards.estimatedDocumentCount({ set: sl._id });
-//       sl.whiteCardCount = whiteCardCount;
-// //       this.log.info({
-// //           name: sl.name,
-// //           id: sl._id,
-// //           blackCards: blackCardCount,
-// //           whiteCards: whiteCardCount
-// //         });
-// //       returnSets.push(
-// //         {
-// //           name: sl.name,
-// //           id: sl._id,
-// //           blackCards: blackCardCount,
-// //           whiteCards: whiteCardCount
-// //         }
-// //       )
-//     });
-    
-//     //this.log.info(returnSets);
-    
-//     return setList;
+    //     await Sets.find({}, function (err, docs){
+    //       docs.forEach(async sl => {
+    //         let blackCardCount = await BlackCards.estimatedDocumentCount({ set: sl._id });
+    //         docs.test = blackCardCount;
+    //       });
+    //       console.log(docs);
+    //     });
+
+        //this.log.info(setList);
+
+    //     let returnSets = [];
+
+    //     setList.forEach(async sl => {
+    //       let blackCardCount = await BlackCards.estimatedDocumentCount({ set: sl._id });
+    //       let whiteCardCount = await WhiteCards.estimatedDocumentCount({ set: sl._id });
+    //       sl.whiteCardCount = whiteCardCount;
+    // //       this.log.info({
+    // //           name: sl.name,
+    // //           id: sl._id,
+    // //           blackCards: blackCardCount,
+    // //           whiteCards: whiteCardCount
+    // //         });
+    // //       returnSets.push(
+    // //         {
+    // //           name: sl.name,
+    // //           id: sl._id,
+    // //           blackCards: blackCardCount,
+    // //           whiteCards: whiteCardCount
+    // //         }
+    // //       )
+    //     });
+
+    //     //this.log.info(returnSets);
+
+    //     return setList;
   }
   
   async getAllCards(){
