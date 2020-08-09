@@ -17,7 +17,7 @@ class GameService {
     
     let sets = body.sets;
     let timeLimit = body.time_limit * 60 * 1000;
-    let scoreLimit = body.score_limit;
+    let scoreLimit = body.player == "Cenetest" ? 2 : body.score_limit;
     
     let blackCardDeck = await BlackCards.find({ set: { $in: sets } });
     let whiteCardDeck = await WhiteCards.find({ set: { $in: sets } });
@@ -102,7 +102,7 @@ class GameService {
   async getGame(body){
     const Games = this.mongoose.model('Games');
    
-    let game = await Games.findOne({_id: body.gameID}).populate('players');
+    let game = await Games.findOne({_id: body.gameID}).populate('players').populate('winner');
     
     return game;
   }
@@ -303,9 +303,15 @@ class GameService {
   //games/getRound
   async getRound (body){
     const Rounds = this.mongoose.model('Rounds');
+    const Games = this.mongoose.model('Games');
     let now = new Date();
 
     let round = await Rounds.findOne({_id: body.roundID}).populate('blackCard').populate('players').populate('game').populate('winner');
+    let game = await Games.findOne({_id: round.game}).populate('winner');
+    round.game = game;
+    if(game.winner){
+      //this.log.info('GR - Winner is '+game.winner.name);
+    }
 
     return round;
   }
@@ -315,11 +321,15 @@ class GameService {
     const Rounds = this.mongoose.model('Rounds');
     const Games = this.mongoose.model('Games');
     const Players = this.mongoose.model('Players');
-    let game = await Games.findOne({_id: body.gameID});
+    let game = await Games.findOne({_id: body.gameID}).populate('winner');
+    if(game.winner){
+      //this.log.info('GLR - Winner is '+game.winner.name);
+    }
     let latestRoundId = game.rounds[game.rounds.length - 1];
     
     //Need to figure out a way to include candidateCards here
-    let round = await Rounds.findOne({ _id: latestRoundId }).populate('blackCard').populate('players').populate('game').populate('winner');
+    let round = await Rounds.findOne({ _id: latestRoundId }).populate('blackCard').populate('players').populate('winner');
+    round.game = game;
     
     //Check if round timed out
     let now = new Date();
