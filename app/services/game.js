@@ -20,7 +20,17 @@ class GameService {
     let scoreLimit = body.player == "Cenetest" ? 2 : body.score_limit;
     
     let blackCardDeck = await BlackCards.find({ set: { $in: sets } });
+    //let whiteCardDeck = await WhiteCards.distinct("text", { set: { $in: sets } });
     let whiteCardDeck = await WhiteCards.find({ set: { $in: sets } });
+    //this.log.info(whiteCardDeck.length);
+    let filteredWhiteCards = [];
+    whiteCardDeck.forEach(card => {
+      if(!filteredWhiteCards.some(c => c.text == card.text)){
+        filteredWhiteCards.push(card);
+      }
+    });
+//     this.log.info(filteredWhiteCards.length);
+//     return;
 
     let playerOne = new Players({
       name: body.player,
@@ -44,7 +54,7 @@ class GameService {
       newGame.blackCards.push(b._id);
     });
 
-    whiteCardDeck.forEach(w => {
+    filteredWhiteCards.forEach(w => {
       newGame.whiteCards.push(w._id);
     });
 
@@ -244,6 +254,7 @@ class GameService {
     });
     if(allCardsSubmitted){
       this.log.info('All active players submitted card. Next phase');
+      round.candidateCards = round.candidateCards.sort(() => Math.random() - 0.5);
       round.status = 'select';
     }
     round = await round.save();
@@ -429,10 +440,11 @@ class GameService {
     const BlackCards = this.mongoose.model('BlackCards');
     const WhiteCards = this.mongoose.model('WhiteCards');
     
-    let sets = ["5ea262f38ff879045230f611","5ea262f38ff879045230f610"];
+    //let sets = ["5ea262f38ff879045230f611","5ea262f38ff879045230f610"];
     
     let blackCardDeck = await BlackCards.find().populate('set');
-    let whiteCardDeck = await WhiteCards.find({ set: { $in: sets } }).populate('set');
+    //let whiteCardDeck = await WhiteCards.find({ set: { $in: sets } }).populate('set');
+    let whiteCardDeck = await WhiteCards.find().populate('set');
     
     let filteredWhiteCards = [];
     whiteCardDeck.forEach(card => {
