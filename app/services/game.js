@@ -20,17 +20,14 @@ class GameService {
     let scoreLimit = body.player == "Cenetest" ? 2 : body.score_limit;
     
     let blackCardDeck = await BlackCards.find({ set: { $in: sets } });
-    //let whiteCardDeck = await WhiteCards.distinct("text", { set: { $in: sets } });
     let whiteCardDeck = await WhiteCards.find({ set: { $in: sets } });
-    //this.log.info(whiteCardDeck.length);
     let filteredWhiteCards = [];
     whiteCardDeck.forEach(card => {
       if(!filteredWhiteCards.some(c => c.text == card.text)){
         filteredWhiteCards.push(card);
       }
     });
-//     this.log.info(filteredWhiteCards.length);
-//     return;
+    this.log.info(filteredWhiteCards.length);
 
     let playerOne = new Players({
       name: body.player,
@@ -333,9 +330,7 @@ class GameService {
     const Games = this.mongoose.model('Games');
     const Players = this.mongoose.model('Players');
     let game = await Games.findOne({_id: body.gameID}).populate('winner');
-    if(game.winner){
-      //this.log.info('GLR - Winner is '+game.winner.name);
-    }
+    
     let latestRoundId = game.rounds[game.rounds.length - 1];
     
     //Need to figure out a way to include candidateCards here
@@ -346,17 +341,33 @@ class GameService {
     let now = new Date();
     let diff = now - round.startTime;
     
-    if(round.status == "submit" && diff > game.timeLimit){
-      let inactives = [];
-      this.log.info('Time limit hit. Next phase');
+    if(diff > game.timeLimit){
+      if(round.status == "submit"){
+        let inactives = [];
+        this.log.info('Time limit hit. Next phase');
 
-      round.players.filter(p => p._id.toString() != round.czar.toString()).forEach(async p => {
-        let player = await Players.findOne({ _id: p._id });
-        player.active = round.candidateCards.some(c => c.player.toString() == p._id.toString());
-        player = await player.save();
-      });
-      round.status = 'select';
-      round = await round.save();
+        round.players.filter(p => p._id.toString() != round.czar.toString()).forEach(async p => {
+          let player = await Players.findOne({ _id: p._id });
+          player.active = round.candidateCards.some(c => c.player.toString() == p._id.toString());
+          player = await player.save();
+        });
+        round.status = 'select';
+        round = await round.save();
+      } else if(round.status == "select"){
+        let player = await Players.findOne({ _id: round.candidateCards[0].player });
+        player.points++;
+        player = player.save();
+        if(player.points >= game.scoreLimit){
+          this.log.info("Game over - Winner "+player.name);
+          game.winner = player._id;
+          game = await game.save();
+        }
+        round.winner = player._id;
+        round.status = 'closed';
+        round = await round.save();
+        let nextRound = await this.startRound(body);
+        return nextRound;
+      }
     }
 
     return round;
@@ -447,14 +458,19 @@ class GameService {
     let whiteCardDeck = await WhiteCards.find().populate('set');
     
     let filteredWhiteCards = [];
+    let duplicates = [];
     whiteCardDeck.forEach(card => {
       if(!filteredWhiteCards.some(c => c.text == card.text)){
         filteredWhiteCards.push(card);
+      } else {
+        duplicates.push({ set: card.set.name, text: card.text });
       }
     });
     
+    this.log.info(duplicates);
+    
     return {
-      whiteCardDeck: filteredWhiteCards,
+      whiteCardDeck: whiteCardDeck,
       blackCardDeck: blackCardDeck
     }
   }
