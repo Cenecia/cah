@@ -112,6 +112,17 @@ module.exports.register = (server, serviceLocator) => {
     }
   );
   
+  server.post(
+    {
+      path: '/games/updateCard',
+      name: 'Update Card',
+      version: '1.0.0'
+    },
+    (req, res, next) => {
+      serviceLocator.get('gameController').updateCard(req, res, next)
+    }
+  );
+  
   server.get(
     {
       path: '/test/test',

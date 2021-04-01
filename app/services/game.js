@@ -574,6 +574,42 @@ class GameService {
 
     return "Let's add some cards.";
   }
+  
+  async updateCard(body) {
+    let { cardType, update, cardID, value } = body;
+    
+    if(cardType == "bc"){
+        const BlackCards = this.mongoose.model('BlackCards');
+        let blackCard = await BlackCards.findOne({_id: cardID});
+        switch(update){
+          case "pick":
+            blackCard.pick = value;
+            blackCard = await blackCard.save();
+            break;
+          case "text":
+            blackCard.text = value;
+            blackCard = await blackCard.save();
+            break;
+          default:
+            return "invalid update field";
+        }
+        return blackCard;
+    } else if(cardType == "wc"){
+      const WhiteCards = this.mongoose.model('WhiteCards');
+        let whiteCard = await WhiteCards.findOne({_id: cardID});
+        switch(update){
+          case "text":
+            whiteCard.text = value;
+            whiteCard = await whiteCard.save();
+            break;
+          default:
+            return "invalid update field";
+        }
+        return whiteCard;
+    }
+    
+    return "Did not update anything.";
+  }
 }
 
 module.exports = GameService;

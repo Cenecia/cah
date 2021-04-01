@@ -168,6 +168,18 @@ class GameController {
     }
   }
   
+  async updateCard(req, res) {
+    try {
+      const {body} = req;
+      const result = await this.gameService.updateCard(body);
+
+      res.send(result);
+    } catch (err) {
+      this.log.error(err.message);
+      res.send(err);
+    }
+  }
+  
 }
 
 module.exports = GameController;
