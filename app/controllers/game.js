@@ -180,6 +180,18 @@ class GameController {
     }
   }
   
+  async addCard(req, res) {
+    try {
+      const {body} = req;
+      const result = await this.gameService.addCard(body);
+
+      res.send(result);
+    } catch (err) {
+      this.log.error(err.message);
+      res.send(err);
+    }
+  }
+  
 }
 
 module.exports = GameController;

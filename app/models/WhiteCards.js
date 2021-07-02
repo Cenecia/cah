@@ -7,7 +7,8 @@ const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const whiteCardSchema = new mongoose.Schema({
   set: { type: ObjectId, required: true, ref: "Sets" },
-  text: { type: String }
+  text: { type: String },
+  blankCard: { type: Boolean, default: false }
 });
 
 module.exports = mongoose.model('WhiteCards', whiteCardSchema);

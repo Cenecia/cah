@@ -123,6 +123,17 @@ module.exports.register = (server, serviceLocator) => {
     }
   );
   
+  server.post(
+    {
+      path: '/games/addCard',
+      name: 'Add Card',
+      version: '1.0.0'
+    },
+    (req, res, next) => {
+      serviceLocator.get('gameController').addCard(req, res, next)
+    }
+  );
+  
   server.get(
     {
       path: '/test/test',

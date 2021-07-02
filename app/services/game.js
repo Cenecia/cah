@@ -23,7 +23,7 @@ class GameService {
     let whiteCardDeck = await WhiteCards.find({ set: { $in: sets } });
     let filteredWhiteCards = [];
     whiteCardDeck.forEach(card => {
-      if(!filteredWhiteCards.some(c => c.text == card.text)){
+      if(card.blankCard || !filteredWhiteCards.some(c => c.text == card.text)){
         filteredWhiteCards.push(card);
       }
     });
@@ -606,6 +606,27 @@ class GameService {
             return "invalid update field";
         }
         return whiteCard;
+    }
+    
+    return "Did not update anything.";
+  }
+  
+  async addCard(body) {
+    let { cardType, setID, value, blankCard } = body;
+    
+    if(cardType == "bc"){
+      
+
+    } else if(cardType == "wc"){
+      const WhiteCards = this.mongoose.model('WhiteCards');
+      
+      let newCard = new WhiteCards({
+        set: setID,
+        text: value,
+        blankCard: blankCard
+      });
+      newCard = await newCard.save();
+      return newCard;
     }
     
     return "Did not update anything.";
