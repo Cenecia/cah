@@ -219,8 +219,12 @@ class GameService {
     //Get the white cards and add the text as a candidate card
     for (let index = 0; index < body.whiteCards.length; index++) {
       this.log.info('White card submitted');
-      let candidateCard = await WhiteCards.findOne({_id:body.whiteCards[index]});
-      candidateCards.push(candidateCard.text);
+      let candidateCard = await WhiteCards.findOne({_id:body.whiteCards[index].cardID});
+      if(candidateCard.blankCard){
+        candidateCards.push(body.whiteCards[index].cardText);
+      } else {
+        candidateCards.push(candidateCard.text);
+      }
     }
 
     //Add the candidate cards to the round, tied to the player
@@ -235,7 +239,7 @@ class GameService {
 
     //remove the submitted white cards from the player's hand
     body.whiteCards.forEach(async whiteCard => {
-      player.hand = player.hand.filter(o => o != whiteCard);
+      player.hand = player.hand.filter(o => o._id != whiteCard.cardID);
     });
     
     //If they were inactive, they are active now
