@@ -90,7 +90,14 @@ class GameService {
     game = await game.save();
     game = await Games.findOne({_id: body.gameID}).populate('players');
 
-    let latestRound = await Rounds.findOne({game: body.gameID, status: "submit"}).populate('blackCard');
+    let latestRound = await Rounds.findOne({game: body.gameID, status: "submit"})
+                                  .populate({
+                                    path: 'blackCard',
+                                    populate: {
+                                      path: 'set',
+                                      model: 'Sets'
+                                    }
+                                  });
 
     let returnMe = {
       whiteCardCount: game.whiteCards.length,
@@ -135,6 +142,10 @@ class GameService {
     }
     
     do {
+      /*
+        Make the next player the czar.
+        game.czar is the index of the game.players array of the player who is the czar
+      */
       if(game.czar === game.players.length-1){
         game.czar = 0;
       } else {
@@ -188,7 +199,15 @@ class GameService {
       player = await player.save();
     });
     
-    round = Rounds.findOne({_id: round._id}).populate('blackCard').populate('players').populate('game');
+    round = Rounds.findOne({_id: round._id})
+                    .populate('players')
+                    .populate('game').populate({
+                      path: 'blackCard',
+                      populate: {
+                        path: 'set',
+                        model: 'Sets'
+                      }
+                    });
 
     return round;
   }
@@ -260,7 +279,16 @@ class GameService {
     }
     round = await round.save();
 
-    round = await Rounds.findOne({_id: body.roundID}).populate('blackCard').populate('players').populate('game');
+    round = await Rounds.findOne({_id: body.roundID})
+                          .populate('players')
+                          .populate('game')
+                          .populate({
+                            path: 'blackCard',
+                            populate: {
+                              path: 'set',
+                              model: 'Sets'
+                            }
+                          });
     return round;
   }
   
@@ -306,8 +334,13 @@ class GameService {
   async getHand (body){
     const Players = this.mongoose.model('Players');
 
-    let player = await Players.findOne({_id: body.playerID}).populate('hand');
-    //this.log.info(player);
+    let player = await Players.findOne({_id: body.playerID}).populate('hand').populate({ 
+     path: 'hand',
+     populate: {
+       path: 'set',
+       model: 'Sets'
+     }});
+    this.log.info(player.hand);
 
     return player;
   }
@@ -318,7 +351,17 @@ class GameService {
     const Games = this.mongoose.model('Games');
     let now = new Date();
 
-    let round = await Rounds.findOne({_id: body.roundID}).populate('blackCard').populate('players').populate('game').populate('winner');
+    let round = await Rounds.findOne({_id: body.roundID})
+                              .populate('players')
+                              .populate('game')
+                              .populate('winner')
+                              .populate({
+                                path: 'blackCard',
+                                populate: {
+                                  path: 'set',
+                                  model: 'Sets'
+                                }
+                              });
     let game = await Games.findOne({_id: round.game}).populate('winner');
     round.game = game;
     if(game.winner){
@@ -338,7 +381,16 @@ class GameService {
     let latestRoundId = game.rounds[game.rounds.length - 1];
     
     //Need to figure out a way to include candidateCards here
-    let round = await Rounds.findOne({ _id: latestRoundId }).populate('blackCard').populate('players').populate('winner');
+    let round = await Rounds.findOne({ _id: latestRoundId })
+                              .populate('players')
+                              .populate('winner')
+                              .populate({
+                                path: 'blackCard',
+                                populate: {
+                                  path: 'set',
+                                  model: 'Sets'
+                                }
+                              });
     round.game = game;
     
     //Check if round timed out
