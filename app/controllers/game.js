@@ -157,6 +157,19 @@ class GameController {
     }
   }
   
+  //getAllCards
+  async mulligan(req, res) {
+    try {
+      const {body} = req;
+      const result = await this.gameService.mulligan(body);
+
+      res.send(result);
+    } catch (err) {
+      this.log.error(err.message);
+      res.send(err);
+    }
+  }
+  
   async getAllSets(req, res) {
     try {
       const result = await this.gameService.getAllSets();

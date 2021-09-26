@@ -179,6 +179,17 @@ module.exports.register = (server, serviceLocator) => {
     }
   );
   
+  server.post(
+    {
+      path: '/games/mulligan',
+      name: 'Add Card',
+      version: '1.0.0'
+    },
+    (req, res, next) => {
+      serviceLocator.get('gameController').mulligan(req, res, next)
+    }
+  );
+  
   //getAllSets
   server.get(
     {

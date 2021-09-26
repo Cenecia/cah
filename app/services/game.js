@@ -27,13 +27,13 @@ class GameService {
         filteredWhiteCards.push(card);
       }
     });
-    this.log.info(filteredWhiteCards.length);
 
     let playerOne = new Players({
       name: body.player,
       hand: [],
       points: 0,
-      active: true
+      active: true,
+      mulligans: 1
     });
     playerOne = await playerOne.save();
     
@@ -66,7 +66,6 @@ class GameService {
     };
 
     this.log.info('New game created.');
-    this.log.info(newGame.scoreLimit);
 
     return returnMe;
   }
@@ -81,7 +80,8 @@ class GameService {
       name: body.player,
       hand: [],
       points: 0,
-      active: true
+      active: true,
+      mulligans: 1
     });
     newPlayer = await newPlayer.save();
     
@@ -211,7 +211,7 @@ class GameService {
 
     return round;
   }
-
+  
   //games/submitWhiteCard
   async submitWhiteCard (body){
     const Games = this.mongoose.model('Games');
@@ -299,7 +299,6 @@ class GameService {
     const Games = this.mongoose.model('Games');
 
     let round = await Rounds.findOne({_id: body.roundID}).populate('players');
-    this.log.info(round);
     let game = await Games.findOne({_id: round.game });
     if(round.status == 'select'){
       round.players.forEach(async player => {
@@ -340,7 +339,6 @@ class GameService {
        path: 'set',
        model: 'Sets'
      }});
-    this.log.info(player.hand);
 
     return player;
   }
@@ -466,51 +464,14 @@ class GameService {
     });
     
     return sets;
-    //     await Sets.find({}, function (err, docs){
-    //       docs.forEach(async sl => {
-    //         let blackCardCount = await BlackCards.estimatedDocumentCount({ set: sl._id });
-    //         docs.test = blackCardCount;
-    //       });
-    //       console.log(docs);
-    //     });
-
-        //this.log.info(setList);
-
-    //     let returnSets = [];
-
-    //     setList.forEach(async sl => {
-    //       let blackCardCount = await BlackCards.estimatedDocumentCount({ set: sl._id });
-    //       let whiteCardCount = await WhiteCards.estimatedDocumentCount({ set: sl._id });
-    //       sl.whiteCardCount = whiteCardCount;
-    // //       this.log.info({
-    // //           name: sl.name,
-    // //           id: sl._id,
-    // //           blackCards: blackCardCount,
-    // //           whiteCards: whiteCardCount
-    // //         });
-    // //       returnSets.push(
-    // //         {
-    // //           name: sl.name,
-    // //           id: sl._id,
-    // //           blackCards: blackCardCount,
-    // //           whiteCards: whiteCardCount
-    // //         }
-    // //       )
-    //     });
-
-    //     //this.log.info(returnSets);
-
-    //     return setList;
   }
   
   async getAllCards(){
     const BlackCards = this.mongoose.model('BlackCards');
     const WhiteCards = this.mongoose.model('WhiteCards');
     
-    //let sets = ["5ea262f38ff879045230f611","5ea262f38ff879045230f610"];
-    
     let blackCardDeck = await BlackCards.find().populate('set');
-    //let whiteCardDeck = await WhiteCards.find({ set: { $in: sets } }).populate('set');
+ 
     let whiteCardDeck = await WhiteCards.find().populate('set');
     
     let filteredWhiteCards = [];
@@ -529,6 +490,72 @@ class GameService {
       whiteCardDeck: whiteCardDeck,
       blackCardDeck: blackCardDeck
     }
+  }
+  
+  async mulligan(body) {
+    
+    const Players = this.mongoose.model('Players');
+    
+    let player = await Players.findOne({_id: body.playerID});
+    if(player.mulligans > 0){
+      const Games = this.mongoose.model('Games');
+      let game = await Games.findOne({_id: body.gameID});
+      const handSize = 8;
+
+      let newWhiteCards = [];
+      let possibleWhiteCards = [];
+
+      //Take the number of white cards we need out of the game's whitecard deck
+      for (var index = 0; index < handSize; index++) {
+        possibleWhiteCards = game.whiteCards.filter(wc => !newWhiteCards.some(nwc => nwc == wc));
+        newWhiteCards.push(possibleWhiteCards[Math.floor(Math.random()*possibleWhiteCards.length)]);
+      }
+
+      player.mulligans--;
+      player.hand = newWhiteCards;
+      await player.save();
+      game.whiteCards = possibleWhiteCards.filter(wc => !newWhiteCards.some(nwc => nwc == wc));
+      game = await game.save();
+      
+      return player;
+    } else {
+      this.log.info('No mulligans left');
+      return 'No mulligans left';
+    }
+
+    /*
+      //Count white cards we need to distribute
+      let handSize = 8;
+      let newWhiteCardCount = handSize;
+      round.players.forEach(p => {
+        newWhiteCardCount += handSize - p.hand.length;
+      });
+
+      let newWhiteCards = [];
+      let possibleWhiteCards = [];
+
+      //Take the number of white cards we need out of the game's whitecard deck
+      for (var index = 0; index < newWhiteCardCount; index++) {
+        possibleWhiteCards = game.whiteCards.filter(wc => !newWhiteCards.some(nwc => nwc == wc));
+        newWhiteCards.push(possibleWhiteCards[Math.floor(Math.random()*possibleWhiteCards.length)]);
+      }
+
+      //newWhiteCards is now all the cards we will give back to players
+      //possibleWhiteCards is all the remaining whitecards in the deck
+      game.whiteCards = possibleWhiteCards.filter(wc => !newWhiteCards.some(nwc => nwc == wc));
+      game = await game.save();
+
+      //Give each player (handSize) white cards
+      round.players.forEach(async p => {
+        let player = await Players.findOne({_id: p});
+        while(player.hand.length < handSize){
+          let whiteCard = newWhiteCards[Math.floor(Math.random()*newWhiteCards.length)];
+          player.hand.push(whiteCard);
+          newWhiteCards = newWhiteCards.filter(e => e !== whiteCard);
+        }
+        player = await player.save();
+      });
+    */
   }
 
   async parseGame() {
