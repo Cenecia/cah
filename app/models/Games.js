@@ -22,7 +22,8 @@ const gameSchema = new mongoose.Schema({
   czar: Number,
   timeLimit: Number,
   scoreLimit: Number,
-  winner: { type: ObjectId, required: false, ref: "Players" }
+  winner: { type: ObjectId, required: false, ref: "Players" },
+  name: String
 });
 
 module.exports = mongoose.model('Games', gameSchema);

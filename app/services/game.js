@@ -18,6 +18,7 @@ class GameService {
     let sets = body.sets;
     let timeLimit = body.time_limit * 60 * 1000;
     let scoreLimit = body.player == "Cenetest" ? 2 : body.score_limit;
+    let gameName = body.name;
     
     let blackCardDeck = await BlackCards.find({ set: { $in: sets } });
     let whiteCardDeck = await WhiteCards.find({ set: { $in: sets } });
@@ -44,7 +45,8 @@ class GameService {
       rounds: [],
       czar: -1,
       timeLimit: timeLimit,
-      scoreLimit: scoreLimit
+      scoreLimit: scoreLimit,
+      name: gameName
     });
 
     blackCardDeck.forEach(b => {
