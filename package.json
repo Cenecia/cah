@@ -12,9 +12,9 @@
     "restify": "^8.5.0",
     "restify-errors": "^8.0.1",
     "restify-url-semver": "^1.1.1",
-    "winston": "^3.1.0"
+    "winston": "^3.1.0",
+    "ws": "^8.2.3"
   },
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
