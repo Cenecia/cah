@@ -1,10 +1,11 @@
 'use strict';
 
 class GameController {
-  constructor(log, gameService, httpStatus) {
+  constructor(log, gameService, httpStatus, socketService) {
     this.log = log;
     this.gameService = gameService;
     this.httpStatus = httpStatus;
+    this.socketService = socketService;
   }
 
   async create(req, res) {
@@ -13,6 +14,7 @@ class GameController {
       const result = await this.gameService.createGame(body);
 
       res.send(result);
+      this.socketService.broadcast_game_data(body.gameID, result);
     } catch (err) {
       this.log.error(err.message);
       res.send(err);
@@ -25,6 +27,7 @@ class GameController {
       const result = await this.gameService.joinGame(body);
 
       res.send(result);
+      this.socketService.broadcast_game_data(body.gameID, result);
     } catch (err) {
       this.log.error(err.message);
       res.send(err);
@@ -50,6 +53,7 @@ class GameController {
       const result = await this.gameService.startRound(body);
 
       res.send(result);
+      this.socketService.broadcast_game_data(body.gameID, result);
     } catch (err) {
       this.log.error(err.message);
       res.send(err);
@@ -63,6 +67,7 @@ class GameController {
       const result = await this.gameService.submitWhiteCard(body);
 
       res.send(result);
+      this.socketService.broadcast_game_data(body.gameID, result);
     } catch (err) {
       this.log.error(err.message);
       res.send(err);
@@ -89,6 +94,7 @@ class GameController {
       const result = await this.gameService.getRound(body);
 
       res.send(result);
+      this.socketService.broadcast_game_data(body.gameID, result);
     } catch (err) {
       this.log.error(err.message);
       res.send(err);
@@ -102,6 +108,7 @@ class GameController {
       const result = await this.gameService.getLatestRound(body);
 
       res.send(result);
+      this.socketService.broadcast_game_data(body.gameID, result);
     } catch (err) {
       this.log.error(err.message);
       res.send(err);
@@ -164,6 +171,7 @@ class GameController {
       const result = await this.gameService.mulligan(body);
 
       res.send(result);
+      this.socketService.broadcast_game_data(body.gameID, result);
     } catch (err) {
       this.log.error(err.message);
       res.send(err);
@@ -187,6 +195,7 @@ class GameController {
       const result = await this.gameService.updateCard(body);
 
       res.send(result);
+      this.socketService.broadcast_game_data(body.gameID, result);
     } catch (err) {
       this.log.error(err.message);
       res.send(err);
@@ -199,6 +208,7 @@ class GameController {
       const result = await this.gameService.addCard(body);
 
       res.send(result);
+      this.socketService.broadcast_game_data(body.gameID, result);
     } catch (err) {
       this.log.error(err.message);
       res.send(err);

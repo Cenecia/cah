@@ -37,6 +37,10 @@ server.use(
   })
 );
 
+//insert dummy cards if necessary
+const dummies = require("./app/lib/dummy_cards");
+dummies();
+
 // initialize validator for all requests
 server.use(validator.paramValidation(logger, joi));
 

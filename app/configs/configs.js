@@ -12,6 +12,9 @@ module.exports = () => ({
     host: process.env.DB_HOST,
     name: process.env.DB_NAME
   },
+  websockets: {
+    port: process.env.WS_PORT
+  },
   application_logging: {
     file: process.env.LOG_PATH,
     level: process.env.LOG_LEVEL || 'info',

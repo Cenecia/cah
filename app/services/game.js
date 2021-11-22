@@ -240,7 +240,7 @@ class GameService {
     //Get the white cards and add the text as a candidate card
     for (let index = 0; index < body.whiteCards.length; index++) {
       this.log.info('White card submitted');
-      let candidateCard = await WhiteCards.findOne({_id:body.whiteCards[index].cardID});
+      let candidateCard = await WhiteCards.findOne({_id:body.whiteCards[index]}); //todo: previously this had a .cardId field. Not sure why, the client only sends the ID and nothing else
       if(candidateCard.blankCard){
         candidateCards.push(body.whiteCards[index].cardText);
       } else {

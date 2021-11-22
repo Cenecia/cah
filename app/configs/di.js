@@ -29,13 +29,21 @@ serviceLocator.register('gameService', (serviceLocator) => {
     return new GameService(log, mongoose, httpStatus, errs);
 });
 
+serviceLocator.register('socketService', (serviceLocator) => {
+    const log = serviceLocator.get('logger');
+    const SocketService = require('../lib/ws_dispatcher');
+
+    return new SocketService(log, config.websockets.port);
+});
+
 serviceLocator.register('gameController', (serviceLocator) => {
     const log = serviceLocator.get('logger');
     const httpStatus = serviceLocator.get('httpStatus');
     const gameService = serviceLocator.get('gameService');
+    const socketService = serviceLocator.get('socketService');
     const GameController = require('../controllers/game');
 
-    return new GameController(log, gameService, httpStatus);
+    return new GameController(log, gameService, httpStatus, socketService);
 });
 
 module.exports = serviceLocator;
