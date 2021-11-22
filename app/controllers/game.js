@@ -26,8 +26,8 @@ class GameController {
       const {body} = req;
       const result = await this.gameService.joinGame(body);
 
+      await this.socketService.broadcast_game_data(body.gameID, result);
       res.send(result);
-      this.socketService.broadcast_game_data(body.gameID, result);
     } catch (err) {
       this.log.error(err.message);
       res.send(err);
