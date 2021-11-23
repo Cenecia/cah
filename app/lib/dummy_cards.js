@@ -40,9 +40,9 @@ async function insert_dummy_cards() {
 
     const white_count = await WhiteCards.countDocuments();
     console.log("Found white cards: " + white_count);
-    if (white_count < 50) {
-        console.log("Less than 50 white cards...");
-        for (let i = 0; i < 50; ++i) {
+    if (white_count < 200) {
+        console.log("Less than 200 white cards...");
+        for (let i = 0; i < 200; ++i) {
             const text = "Test White Card " + i;
             const exists = await WhiteCards.findOne({set: setid, text: text});
             if (!exists) {

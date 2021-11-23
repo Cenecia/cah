@@ -12,9 +12,8 @@ class GameController {
     try {
       const {body} = req;
       const result = await this.gameService.createGame(body);
-
       res.send(result);
-      this.socketService.broadcast_game_data(body.gameID, result);
+
     } catch (err) {
       this.log.error(err.message);
       res.send(err);
@@ -25,9 +24,10 @@ class GameController {
     try {
       const {body} = req;
       const result = await this.gameService.joinGame(body);
-
-      await this.socketService.broadcast_game_data(body.gameID, result);
       res.send(result);
+
+      const game_state_result = await this.gameService.getGame(body);
+      this.socketService.broadcast_game_data(body.gameID, game_state_result);
     } catch (err) {
       this.log.error(err.message);
       res.send(err);
@@ -51,9 +51,10 @@ class GameController {
     try {
       const {body} = req;
       const result = await this.gameService.startRound(body);
-
       res.send(result);
-      this.socketService.broadcast_game_data(body.gameID, result);
+
+      const game_state_result = await this.gameService.getRound(body);
+      this.socketService.broadcast_game_data(body.gameID, game_state_result);
     } catch (err) {
       this.log.error(err.message);
       res.send(err);
@@ -65,9 +66,10 @@ class GameController {
     try {
       const {body} = req;
       const result = await this.gameService.submitWhiteCard(body);
-
       res.send(result);
-      this.socketService.broadcast_game_data(body.gameID, result);
+
+      const game_state_result = await this.gameService.getRound(body);
+      this.socketService.broadcast_game_data(body.gameID, game_state_result);
     } catch (err) {
       this.log.error(err.message);
       res.send(err);
@@ -92,9 +94,10 @@ class GameController {
     try {
       const {body} = req;
       const result = await this.gameService.getRound(body);
-
       res.send(result);
-      this.socketService.broadcast_game_data(body.gameID, result);
+
+      const game_state_result = await this.gameService.getRound(body);
+      this.socketService.broadcast_game_data(body.gameID, game_state_result);
     } catch (err) {
       this.log.error(err.message);
       res.send(err);
@@ -106,9 +109,10 @@ class GameController {
     try {
       const {body} = req;
       const result = await this.gameService.getLatestRound(body);
-
       res.send(result);
-      this.socketService.broadcast_game_data(body.gameID, result);
+
+      const game_state_result = await this.gameService.getRound(body);
+      this.socketService.broadcast_game_data(body.gameID, game_state_result);
     } catch (err) {
       this.log.error(err.message);
       res.send(err);
@@ -120,8 +124,10 @@ class GameController {
     try {
       const {body} = req;
       const result = await this.gameService.selectCandidateCard(body);
-
       res.send(result);
+
+      const game_state_result = await this.gameService.getRound(body);
+      this.socketService.broadcast_game_data(body.gameID, game_state_result);
     } catch (err) {
       this.log.error(err.message);
       res.send(err);
@@ -169,9 +175,10 @@ class GameController {
     try {
       const {body} = req;
       const result = await this.gameService.mulligan(body);
-
       res.send(result);
-      this.socketService.broadcast_game_data(body.gameID, result);
+
+      const game_state_result = await this.gameService.getRound(body);
+      this.socketService.broadcast_game_data(body.gameID, game_state_result);
     } catch (err) {
       this.log.error(err.message);
       res.send(err);
@@ -193,9 +200,10 @@ class GameController {
     try {
       const {body} = req;
       const result = await this.gameService.updateCard(body);
-
       res.send(result);
-      this.socketService.broadcast_game_data(body.gameID, result);
+
+      const game_state_result = await this.gameService.getRound(body);
+      this.socketService.broadcast_game_data(body.gameID, game_state_result);
     } catch (err) {
       this.log.error(err.message);
       res.send(err);
@@ -208,7 +216,6 @@ class GameController {
       const result = await this.gameService.addCard(body);
 
       res.send(result);
-      this.socketService.broadcast_game_data(body.gameID, result);
     } catch (err) {
       this.log.error(err.message);
       res.send(err);
