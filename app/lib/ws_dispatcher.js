@@ -66,6 +66,12 @@ class WS_Messenger {
                     this.set_player_id(create_data.players[create_data.players.length-1]._id); //todo: this seems like a bad way to assign IDs
                     await this.say("create", create_data);
                     break;
+                case 'submit_white':
+                    this.log.info(`Submit White message for player ${this.get_player_id()} and game ${msg.payload.gameID}`);
+                    const round_data = this.game_service.submitWhiteCard(msg.payload);
+                    await this.say("hand", round_data.players.findOne(p => p._id === this.get_player_id()).hand);
+                    await this.dispatcher.broadcast_game_data(round_data.players.map(p => p._id), "round", round_data);
+                    break;
                 case 'refresh':
                     break;
                 default:
