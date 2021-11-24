@@ -33,6 +33,10 @@ class WS_Messenger {
         }
 
         this.socket.on("message", this._message_handler);
+        this.socket.on("close", function() {
+            myself.log.info(`Closed socket attached to player ${myself.player_id}`);
+            myself.socket = null;
+        });
     }
 
     /**
@@ -90,12 +94,29 @@ class WS_Messenger {
     }
 
     /**
+     * Returns true if the attached socket was closed.
+     * @returns {boolean}
+     */
+    is_closed() {
+        return this.socket === null;
+    }
+
+    /**
      * Transmits a message to the player associated with this messenger.
      * @param action
      * @param payload
      */
     async say(action, payload) {
-        return this.socket.send(JSON.stringify({action: action, player_id: this.get_player_id(), payload: payload}));
+        if(!this.is_closed()) {
+            return this.socket.send(JSON.stringify({
+                action: action,
+                player_id: this.get_player_id(),
+                payload: payload
+            }));
+        }
+        else {
+            return null;
+        }
     }
 }
 
