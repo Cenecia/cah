@@ -67,14 +67,19 @@ class WS_Messenger {
                     await this.say("create", create_data);
                     break;
                 case 'round':
-                    this.log.info(`Round message for player ${this.get_player_id()} and game ${msg.payload.gameID}`);//todo: this is broken, doesn't work with no game started
-                    const round_data = await this.game_service.getRound(msg.payload);
+                    this.log.info(`Round message for player ${this.get_player_id()} and game ${msg.payload.gameID}`);
+                    const round_data = await this.game_service.startRound(msg.payload);
                     await this.dispatcher.broadcast_game_data(round_data.players.map(p => p._id.toString()), "round", round_data);
+                    break;
+                case 'hand':
+                    this.log.info(`Hand message for player ${this.get_player_id()}`);
+                    const hand_data = await this.game_service.getHand(msg.payload);
+                    await this.say("hand", hand_data);
                     break;
                 case 'submit_white':
                     this.log.info(`Submit White message for player ${this.get_player_id()} and game ${msg.payload.gameID}`);
                     const white_data = this.game_service.submitWhiteCard(msg.payload);
-                    await this.say("hand", white_data.players.findOne(p => p._id.toString() === this.get_player_id()).hand);
+                    await this.say("hand", white_data.players.find(p => p._id.toString() === this.get_player_id()).hand);
                     await this.dispatcher.broadcast_game_data(white_data.players.map(p => p._id.toString()), "round", white_data);
                     break;
                 case 'refresh':
@@ -124,7 +129,7 @@ class WS_Messenger {
         if(!this.is_closed()) {
             return this.socket.send(JSON.stringify({
                 action: action,
-                player_id: this.get_player_id(),
+                playerID: this.get_player_id(),
                 payload: payload
             }));
         }
