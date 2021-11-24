@@ -66,11 +66,16 @@ class WS_Messenger {
                     this.set_player_id(create_data.players[create_data.players.length-1]._id.toString()); //todo: this seems like a bad way to assign IDs
                     await this.say("create", create_data);
                     break;
-                case 'round':
-                    this.log.info(`Round message for player ${this.get_player_id()} and game ${msg.payload.gameID}`);
-                    const round_data = await this.game_service.startRound(msg.payload);
-                    await this.dispatcher.broadcast_game_data(round_data.players.map(p => p._id.toString()), "round", round_data);
+                case 'start_round':
+                    this.log.info(`Start Round message for player ${this.get_player_id()} and game ${msg.payload.gameID}`);
+                    const start_data = await this.game_service.startRound(msg.payload);
+                    await this.dispatcher.broadcast_game_data(start_data.players.map(p => p._id.toString()), "round", start_data);
                     break;
+                // case 'round':
+                //     this.log.info(`Round message for player ${this.get_player_id()} and game ${msg.payload.gameID}`);
+                //     const round_data = await this.game_service.getLatestRound(msg.payload);
+                //     await this.dispatcher.broadcast_game_data(round_data.players.map(p => p._id.toString()), "round", round_data);
+                //     break;
                 case 'hand':
                     this.log.info(`Hand message for player ${this.get_player_id()}`);
                     const hand_data = await this.game_service.getHand(msg.payload);
@@ -78,18 +83,25 @@ class WS_Messenger {
                     break;
                 case 'submit_white':
                     this.log.info(`Submit White message for player ${this.get_player_id()} and game ${msg.payload.gameID}`);
-                    const white_data = this.game_service.submitWhiteCard(msg.payload);
+                    const white_data = await this.game_service.submitWhiteCard(msg.payload);
                     await this.say("hand", white_data.players.find(p => p._id.toString() === this.get_player_id()).hand);
                     await this.dispatcher.broadcast_game_data(white_data.players.map(p => p._id.toString()), "round", white_data);
+                    break;
+                case 'select_candidate':
+                    this.log.info(`Select candidate message for player ${this.get_player_id()} and game ${msg.payload.gameID}`);
+                    await this.game_service.selectCandidateCard(msg.payload);
+                    const select_data = await this.game_service.getLatestRound(msg.payload);
+                    await this.dispatcher.broadcast_game_data(select_data.players.map(p => p._id.toString()), "round", select_data);
                     break;
                 case 'refresh':
                     break;
                 default:
+                    this.log.warn(`Unhandled event: ${this.msg}`);
                     await this.say("info","I don't know what that means.");
             }
         }
         catch(e) {
-            this.log.error("wsd: " + e);
+            this.log.error("wsd mh: " + e);
         }
     }
 
@@ -181,10 +193,15 @@ class WS_Dispatcher {
      * @param payload
      */
     async broadcast_game_data(players, action, payload) {
-        this.log.info(`ws broadcast ${JSON.stringify(players)} ${JSON.stringify(action)} ${JSON.stringify(payload)}`);
-        for(const player of players) {
-            let messenger = this.ws_messengers.find(wsm => wsm.get_player_id() === player);
-            await messenger.say(action, payload);
+        try {
+            this.log.info(`ws broadcast ${JSON.stringify(players)} ${JSON.stringify(action)} ${JSON.stringify(payload)}`);
+            for (const player of players) {
+                let messenger = this.ws_messengers.find(wsm => wsm.get_player_id() === player);
+                await messenger.say(action, payload);
+            }
+        }
+        catch(e) {
+            this.log.error("ws broadcast: " + e);
         }
     }
 
