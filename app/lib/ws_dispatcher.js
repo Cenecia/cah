@@ -35,23 +35,29 @@ class WS_Messenger {
 
     /**
      * Handles incoming WebSocket message payloads.
-     * todo: validation of identifiers, better security
+     * todo: validation of identifiers and payloads, better security
      * @param incoming
      */
     async message_handler(incoming){
         try {
             const msg = JSON.parse(incoming);
             switch(msg.action) {
-                case 'register':
-                    await this.say("info", "Hello!");
-                    await this.say("info", "I'll send you updates for " + msg.player_id);
-                    this.set_player_id(msg.player_id);
-                    break;
+                // case 'register':
+                //     await this.say("info", "Hello!");
+                //     await this.say("info", "I'll send you updates for " + msg.player_id);
+                //     this.set_player_id(msg.player_id);
+                //     break;
                 case 'join': //todo: handle rejoin situation?
                     this.log.info(`Join message for player ${this.get_player_id()} and game ${msg.payload.gameID}`);
-                    const game_data = await this.game_service.joinGame(msg.payload);
-                    let player_id = game_data.players[game_data.players.length-1]._id; //todo: this seems like a bad way to assign IDs
-                    await this.say("join", game_data);
+                    const join_data = await this.game_service.joinGame(msg.payload);
+                    this.set_player_id(join_data.players[join_data.players.length-1]._id); //todo: this seems like a bad way to assign IDs
+                    await this.say("join", join_data);
+                    break;
+                case 'create':
+                    this.log.info(`Create new game message...`);
+                    const create_data = await this.game_service.createGame(msg.payload);
+                    this.set_player_id(create_data.players[create_data.players.length-1]._id); //todo: this seems like a bad way to assign IDs
+                    await this.say("create", create_data);
                     break;
                 case 'refresh':
                     break;
