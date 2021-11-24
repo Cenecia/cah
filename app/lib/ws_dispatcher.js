@@ -56,21 +56,26 @@ class WS_Messenger {
                 case 'join': //todo: handle rejoin situation?
                     this.log.info(`Join message for player ${this.get_player_id()} and game ${msg.payload.gameID}`);
                     const join_data = await this.game_service.joinGame(msg.payload);
-                    this.set_player_id(join_data.players[join_data.players.length-1]._id); //todo: this seems like a bad way to assign IDs
+                    this.set_player_id(join_data.players[join_data.players.length-1]._id.toString()); //todo: this seems like a bad way to assign IDs
                     await this.say("join", join_data);
-                    await this.dispatcher.broadcast_game_data(join_data.players.map(p => p._id), "update", join_data);
+                    await this.dispatcher.broadcast_game_data(join_data.players.map(p => p._id.toString()), "update", join_data);
                     break;
                 case 'create':
                     this.log.info(`Create new game message...`);
                     const create_data = await this.game_service.createGame(msg.payload);
-                    this.set_player_id(create_data.players[create_data.players.length-1]._id); //todo: this seems like a bad way to assign IDs
+                    this.set_player_id(create_data.players[create_data.players.length-1]._id.toString()); //todo: this seems like a bad way to assign IDs
                     await this.say("create", create_data);
+                    break;
+                case 'round':
+                    this.log.info(`Round message for player ${this.get_player_id()} and game ${msg.payload.gameID}`);//todo: this is broken, doesn't work with no game started
+                    const round_data = await this.game_service.getRound(msg.payload);
+                    await this.dispatcher.broadcast_game_data(round_data.players.map(p => p._id.toString()), "round", round_data);
                     break;
                 case 'submit_white':
                     this.log.info(`Submit White message for player ${this.get_player_id()} and game ${msg.payload.gameID}`);
-                    const round_data = this.game_service.submitWhiteCard(msg.payload);
-                    await this.say("hand", round_data.players.findOne(p => p._id === this.get_player_id()).hand);
-                    await this.dispatcher.broadcast_game_data(round_data.players.map(p => p._id), "round", round_data);
+                    const white_data = this.game_service.submitWhiteCard(msg.payload);
+                    await this.say("hand", white_data.players.findOne(p => p._id.toString() === this.get_player_id()).hand);
+                    await this.dispatcher.broadcast_game_data(white_data.players.map(p => p._id.toString()), "round", white_data);
                     break;
                 case 'refresh':
                     break;
@@ -85,9 +90,12 @@ class WS_Messenger {
 
     /**
      * Sets the player ID for this messenger.
-     * @param player_id
+     * @param player_id - string (anything else will have toString() called on it)
      */
     set_player_id(player_id) {
+        if(typeof(player_id) !== "string") {
+            player_id = player_id.toString();
+        }
         this.player_id = player_id;
     }
 
@@ -163,15 +171,15 @@ class WS_Dispatcher {
 
     /**
      * Send an action and payload to a list of players.
-     * @param players
+     * @param players - array of string IDs
      * @param action
      * @param payload
      */
-    broadcast_game_data(players, action, payload) {
+    async broadcast_game_data(players, action, payload) {
         this.log.info(`ws broadcast ${JSON.stringify(players)} ${JSON.stringify(action)} ${JSON.stringify(payload)}`);
         for(const player of players) {
-            this.ws_messengers.filter(wsm => wsm.get_player_id() === player)
-                              .forEach(wsm => wsm.say(action, payload));
+            let messenger = this.ws_messengers.find(wsm => wsm.get_player_id() === player);
+            await messenger.say(action, payload);
         }
     }
 
@@ -181,10 +189,10 @@ class WS_Dispatcher {
      * @param action
      * @param payload
      */
-    message_player(player_id, action, payload) {
-        this.log.info(`ws message ${JSON.stringif(player_id)} ${JSON.stringify(action)} ${JSON.stringify(payload)}`);
-        const messenger = this.ws_messengers.findOne(wsm => wsm.get_player_id() === player_id);
-        messenger.say(action, payload);
+    async message_player(player_id, action, payload) {
+        this.log.info(`ws message ${JSON.stringify(player_id)} ${JSON.stringify(action)} ${JSON.stringify(payload)}`);
+        const messenger = this.ws_messengers.find(wsm => wsm.get_player_id() === player_id);
+        await messenger.say(action, payload);
     }
 
     //todo: kick player, cleanup, etc.
