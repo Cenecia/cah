@@ -13,12 +13,14 @@ const ws = require('ws');
 class WS_Messenger {
     /**
      * Constructs a messenger object.
+     * @param dispatcher
      * @param log
      * @param game_service
      * @param socket
      * @constructor
      */
-    constructor(log, game_service, socket) {
+    constructor(dispatcher, log, game_service, socket) {
+        this.dispatcher = dispatcher;
         this.log = log;
         this.socket = socket;
         this.game_service = game_service;
@@ -52,6 +54,7 @@ class WS_Messenger {
                     const join_data = await this.game_service.joinGame(msg.payload);
                     this.set_player_id(join_data.players[join_data.players.length-1]._id); //todo: this seems like a bad way to assign IDs
                     await this.say("join", join_data);
+                    await this.dispatcher.broadcast_game_data(join_data.players.map(p => p._id), "update", join_data);
                     break;
                 case 'create':
                     this.log.info(`Create new game message...`);
@@ -126,7 +129,7 @@ class WS_Dispatcher {
     connection_handler(socket) {
         //this.log.info(`Connection opened: ${socket.ipAddress.toString()}`);
         this.log.info(`Connection opened: ${socket}`);
-        this.ws_messengers.push(new WS_Messenger(this.log, this.game_service, socket));
+        this.ws_messengers.push(new WS_Messenger(this, this.log, this.game_service, socket));
         this.log.info("Total endpoints: " + this.ws_messengers.length);
 
     }
