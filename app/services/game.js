@@ -240,7 +240,7 @@ class GameService {
     //Get the white cards and add the text as a candidate card
     for (let index = 0; index < body.whiteCards.length; index++) {
       this.log.info('White card submitted');
-      let candidateCard = await WhiteCards.findOne({_id:body.whiteCards[index]}); //todo: previously this had a .cardId field. Not sure why, the client only sends the ID and nothing else
+      let candidateCard = await WhiteCards.findOne({_id:body.whiteCards[index]});
       if(candidateCard.blankCard){
         candidateCards.push(body.whiteCards[index].cardText);
       } else {
@@ -260,7 +260,7 @@ class GameService {
 
     //remove the submitted white cards from the player's hand
     body.whiteCards.forEach(async whiteCard => {
-      player.hand = player.hand.filter(o => o._id != whiteCard.cardID);
+      player.hand = player.hand.filter(o => o._id != whiteCard);
     });
     
     //If they were inactive, they are active now
