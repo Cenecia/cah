@@ -719,6 +719,41 @@ class GameService {
     
     return "Did not update anything.";
   }
+
+  async kickPlayer(body) {
+    const Games = this.mongoose.model('Games');
+    const Players = this.mongoose.model('Players');
+    const Rounds = this.mongoose.model('Rounds');
+
+    let game = await Games.findOne({_id: body.gameID});
+
+    game.players = game.players.filter(p => p._id != body.playerID);
+    await game.save();
+    game = await Games.findOne({_id: body.gameID}).populate('players');
+
+    let latestRound = await Rounds.findOne({game: body.gameID, status: "submit"})
+        .populate({
+          path: 'blackCard',
+          populate: {
+            path: 'set',
+            model: 'Sets'
+          }
+        });
+
+    let returnMe = {
+      whiteCardCount: game.whiteCards.length,
+      blackCardCount: game.blackCards.length,
+      gameID: game._id,
+      players: game.players,
+      rounds: game.rounds,
+      latestRound: latestRound,
+      owner: game.owner
+    };
+
+    this.log.info('Kicked player ' + body.playerID);
+
+    return returnMe;
+  }
 }
 
 module.exports = GameService;

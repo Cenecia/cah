@@ -54,7 +54,7 @@ class WS_Messenger {
                 //     this.set_player_id(msg.player_id);
                 //     break;
                 case 'join': //todo: handle rejoin situation?
-                    this.log.info(`Join message for player ${this.get_player_id()} and game ${msg.payload.gameID}`);
+                    this.log.info(`Join message from player ${this.get_player_id()} and game ${msg.payload.gameID}`);
                     const join_data = await this.game_service.joinGame(msg.payload);
                     this.set_player_id(join_data.players[join_data.players.length-1]._id.toString()); //todo: this seems like a bad way to assign IDs
                     await this.say("join", join_data);
@@ -67,7 +67,7 @@ class WS_Messenger {
                     await this.say("create", create_data);
                     break;
                 case 'start_round':
-                    this.log.info(`Start Round message for player ${this.get_player_id()} and game ${msg.payload.gameID}`);
+                    this.log.info(`Start Round message from player ${this.get_player_id()} and game ${msg.payload.gameID}`);
                     const start_data = await this.game_service.startRound(msg.payload);
                     await this.dispatcher.broadcast_game_data(start_data.players.map(p => p._id.toString()), "round", start_data);
                     break;
@@ -77,21 +77,27 @@ class WS_Messenger {
                 //     await this.dispatcher.broadcast_game_data(round_data.players.map(p => p._id.toString()), "round", round_data);
                 //     break;
                 case 'hand':
-                    this.log.info(`Hand message for player ${this.get_player_id()}`);
+                    this.log.info(`Hand message from player ${this.get_player_id()}`);
                     const hand_data = await this.game_service.getHand(msg.payload);
                     await this.say("hand", hand_data);
                     break;
                 case 'submit_white':
-                    this.log.info(`Submit White message for player ${this.get_player_id()} and game ${msg.payload.gameID}`);
+                    this.log.info(`Submit White message from player ${this.get_player_id()} and game ${msg.payload.gameID}`);
                     const white_data = await this.game_service.submitWhiteCard(msg.payload);
                     await this.say("hand", white_data.players.find(p => p._id.toString() === this.get_player_id()).hand);
                     await this.dispatcher.broadcast_game_data(white_data.players.map(p => p._id.toString()), "round", white_data);
                     break;
                 case 'select_candidate':
-                    this.log.info(`Select candidate message for player ${this.get_player_id()} and game ${msg.payload.gameID}`);
+                    this.log.info(`Select candidate message from player ${this.get_player_id()} and game ${msg.payload.gameID}`);
                     await this.game_service.selectCandidateCard(msg.payload);
                     const select_data = await this.game_service.getLatestRound(msg.payload);
                     await this.dispatcher.broadcast_game_data(select_data.players.map(p => p._id.toString()), "round", select_data);
+                    break;
+                case 'kick':
+                    this.log.info(`Kick message from player ${this.get_player_id()} and game ${msg.payload.gameID}`);
+                    const kick_data = await this.game_service.kickPlayer(msg.payload);
+                    await this.dispatcher.broadcast_game_data(kick_data.players.map(p => p._id.toString()), "kick", kick_data);
+                    await this.dispatcher.kick_player(msg.payload.playerID);
                     break;
                 case 'refresh':
                     break;
@@ -148,6 +154,14 @@ class WS_Messenger {
         else {
             return null;
         }
+    }
+
+    /**
+     * Close the connection.
+     */
+    async close() {
+        await this.socket.close();
+        this.socket = null;
     }
 }
 
@@ -217,7 +231,18 @@ class WS_Dispatcher {
         await messenger.say(action, payload);
     }
 
-    //todo: kick player, cleanup, etc.
+    /**
+     * Remove a player from the messenger list, including closing its connection.
+     * @param player_id
+     */
+    async kick_player(player_id) {
+        this.log.info(`ws kick ${JSON.stringify(player_id)}`);
+        const messenger = this.ws_messengers.find(wsm => wsm.get_player_id() === player_id);
+        messenger.close();
+        this.ws_messengers = this.ws_messengers.find(wsm => wsm.get_player_id() !== player_id)
+    }
+
+    //todo: cleanup, etc.
 }
 
 
