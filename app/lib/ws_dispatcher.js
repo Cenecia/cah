@@ -97,6 +97,7 @@ class WS_Messenger {
                     this.log.info(`Kick message from player ${this.get_player_id()} and game ${msg.payload.gameID}`);
                     const kick_data = await this.game_service.kickPlayer(msg.payload);
                     await this.dispatcher.broadcast_game_data(kick_data.players.map(p => p._id.toString()), "kick", kick_data);
+                    await this.dispatcher.broadcast_game_data([msg.payload.playerID], "kick", kick_data);
                     await this.dispatcher.kick_player(msg.payload.playerID);
                     break;
                 case 'refresh':
@@ -239,7 +240,7 @@ class WS_Dispatcher {
         this.log.info(`ws kick ${JSON.stringify(player_id)}`);
         const messenger = this.ws_messengers.find(wsm => wsm.get_player_id() === player_id);
         messenger.close();
-        this.ws_messengers = this.ws_messengers.find(wsm => wsm.get_player_id() !== player_id)
+        this.ws_messengers = this.ws_messengers.filter(wsm => wsm.get_player_id() !== player_id)
     }
 
     //todo: cleanup, etc.
