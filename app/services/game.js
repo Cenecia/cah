@@ -46,7 +46,8 @@ class GameService {
       czar: -1,
       timeLimit: timeLimit,
       scoreLimit: scoreLimit,
-      name: gameName
+      name: gameName,
+      owner: playerOne._id
     });
 
     blackCardDeck.forEach(b => {
@@ -64,7 +65,8 @@ class GameService {
       whiteCardCount: newGame.whiteCards.length,
       blackCardCount: newGame.blackCards.length,
       gameID: newGame._id,
-      players: newGame.players
+      players: newGame.players,
+      owner: newGame.owner
     };
 
     this.log.info('New game created.');
@@ -107,7 +109,8 @@ class GameService {
       gameID: game._id,
       players: game.players,
       rounds: game.rounds,
-      latestRound: latestRound
+      latestRound: latestRound,
+      owner: game.owner
     };
 
     this.log.info(newPlayer.name+' joined game.');
