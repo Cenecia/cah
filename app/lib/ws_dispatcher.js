@@ -81,6 +81,11 @@ class WS_Messenger {
                     const hand_data = await this.game_service.getHand(msg.payload);
                     await this.say("hand", hand_data);
                     break;
+                case 'mulligan':
+                    this.log.info(`Hand message from player ${this.get_player_id()}`);
+                    const mulligan_data = await this.game_service.mulligan(msg.payload);
+                    await this.say("hand", mulligan_data);
+                    break;
                 case 'submit_white':
                     this.log.info(`Submit White message from player ${this.get_player_id()} and game ${msg.payload.gameID}`);
                     const white_data = await this.game_service.submitWhiteCard(msg.payload);
