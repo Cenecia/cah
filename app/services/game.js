@@ -19,7 +19,7 @@ class GameService {
     let timeLimit = body.time_limit * 60 * 1000;
     let scoreLimit = body.player == "Cenetest" ? 2 : body.score_limit;
     let gameName = body.name;
-    
+
     let blackCardDeck = await BlackCards.find({ set: { $in: sets } });
     let whiteCardDeck = await WhiteCards.find({ set: { $in: sets } });
     let filteredWhiteCards = [];
@@ -113,7 +113,8 @@ class GameService {
       owner: game.owner
     };
 
-    this.log.info(newPlayer.name+' joined game.');
+    this.log.info(`Player (${newPlayer.name}) joined game.`);
+    //this.log.info(returnMe);
 
     return returnMe;
   }
@@ -135,17 +136,17 @@ class GameService {
     const handSize = 8;
 
     let game = await Games.findOne({_id: body.gameID}).populate('players');
-    
+
     //Make sure the game has no rounds, or the latest round is 'closed'
     let latestRoundId = game.rounds[game.rounds.length - 1];
     this.log.info(game.winner);
-    
+
     let latestRound = await Rounds.findOne({ _id: latestRoundId });
     if((latestRound && latestRound.status != 'closed' || game.winner)){
       this.log.info('Cannot start next round.');
       return;
     }
-    
+
     do {
       /*
         Make the next player the czar.
@@ -157,7 +158,7 @@ class GameService {
         game.czar++;
       }
     } while (!game.players[game.czar].active);
-    
+
     let round = new Rounds({
       players: game.players,
       status: 'submit',
@@ -169,25 +170,25 @@ class GameService {
     });
 
     round = await round.save();
-    
+
     game.rounds.push(round);
     game.blackCards = game.blackCards.filter(e => e._id !== round.blackCard);
-    
+
     //Count white cards we need to distribute
     let newWhiteCardCount = 0;
     round.players.forEach(p => {
       newWhiteCardCount += handSize - p.hand.length;
     });
-    
+
     let newWhiteCards = [];
     let possibleWhiteCards = [];
-    
+
     //Take the number of white cards we need out of the game's whitecard deck
     for (var index = 0; index < newWhiteCardCount; index++) {
       possibleWhiteCards = game.whiteCards.filter(wc => !newWhiteCards.some(nwc => nwc == wc));
       newWhiteCards.push(possibleWhiteCards[Math.floor(Math.random()*possibleWhiteCards.length)]);
     }
-    
+
     //newWhiteCards is now all the cards we will give back to players
     //possibleWhiteCards is all the remaining whitecards in the deck
     game.whiteCards = possibleWhiteCards.filter(wc => !newWhiteCards.some(nwc => nwc == wc));
@@ -216,7 +217,7 @@ class GameService {
 
     return round;
   }
-  
+
   //games/submitWhiteCard
   async submitWhiteCard (body){
     const Games = this.mongoose.model('Games');
@@ -225,7 +226,7 @@ class GameService {
     const WhiteCards = this.mongoose.model('WhiteCards');
 
     let round = await Rounds.findOne({_id: body.roundID}).populate('players');
-    
+
     if(round.status !== 'submit'){
       //They somehow submitted a card after all cards were submitted
       this.log.info('All White Cards submitted');
@@ -233,7 +234,7 @@ class GameService {
     }
 
     if(round.candidateCards.some(card => card.player == body.playerID)){
-      //They somehow submitted a 
+      //They somehow submitted a
       this.log.info('Already submitted a card');
       return 'Already submitted a card';
     }
@@ -257,6 +258,11 @@ class GameService {
       cards: candidateCards
     });
 
+    if(round.candidateCards.length === round.players.length-1){
+      round.status = 'select';
+    }
+    round = await round.save();
+
     let game = await Games.findOne({_id: round.game});
 
     let player = await Players.findOne({_id: body.playerID});
@@ -265,10 +271,10 @@ class GameService {
     body.whiteCards.forEach(async whiteCard => {
       player.hand = player.hand.filter(o => o._id != whiteCard);
     });
-    
+
     //If they were inactive, they are active now
     player.active = true;
-    
+
     player = await player.save();
 
     let allCardsSubmitted = true;
@@ -338,7 +344,7 @@ class GameService {
   async getHand (body){
     const Players = this.mongoose.model('Players');
 
-    let player = await Players.findOne({_id: body.playerID}).populate('hand').populate({ 
+    let player = await Players.findOne({_id: body.playerID}).populate('hand').populate({
      path: 'hand',
      populate: {
        path: 'set',
@@ -380,9 +386,9 @@ class GameService {
     const Games = this.mongoose.model('Games');
     const Players = this.mongoose.model('Players');
     let game = await Games.findOne({_id: body.gameID}).populate('winner');
-    
+
     let latestRoundId = game.rounds[game.rounds.length - 1];
-    
+
     //Need to figure out a way to include candidateCards here
     let round = await Rounds.findOne({ _id: latestRoundId })
                               .populate('players')
@@ -395,11 +401,11 @@ class GameService {
                                 }
                               });
     round.game = game;
-    
+
     //Check if round timed out
     let now = new Date();
     let diff = now - round.startTime;
-    
+
     if(diff > game.timeLimit){
       if(round.status == "submit"){
         let inactives = [];
@@ -431,17 +437,17 @@ class GameService {
 
     return round;
   }
-  
+
   async getAllSets(){
     const Sets = this.mongoose.model('Sets');
     const BlackCards = this.mongoose.model('BlackCards');
     const WhiteCards = this.mongoose.model('WhiteCards');
-    
+
     let blackCardDeck = await BlackCards.find().populate('set');
     let whiteCardDeck = await WhiteCards.find().populate('set');
-    
+
     let sets = [];
-    
+
     blackCardDeck.forEach(bc => {
       if(!sets.some(s => s.id.toString() == bc.set._id.toString())){
         sets.push({
@@ -454,7 +460,7 @@ class GameService {
         sets.find(s => s.id.toString() == bc.set._id.toString()).blackCardCount++;
       }
     });
-    
+
     whiteCardDeck.forEach(wc => {
       if(!sets.some(s => s.id.toString() == wc.set._id.toString())){
         sets.push({
@@ -467,18 +473,18 @@ class GameService {
         sets.find(s => s.id.toString() == wc.set._id.toString()).whiteCardCount++;
       }
     });
-    
+
     return sets;
   }
-  
+
   async getAllCards(){
     const BlackCards = this.mongoose.model('BlackCards');
     const WhiteCards = this.mongoose.model('WhiteCards');
-    
+
     let blackCardDeck = await BlackCards.find().populate('set');
- 
+
     let whiteCardDeck = await WhiteCards.find().populate('set');
-    
+
     let filteredWhiteCards = [];
     let duplicates = [];
     whiteCardDeck.forEach(card => {
@@ -488,19 +494,19 @@ class GameService {
         duplicates.push({ set: card.set.name, text: card.text });
       }
     });
-    
+
     this.log.info(duplicates);
-    
+
     return {
       whiteCardDeck: whiteCardDeck,
       blackCardDeck: blackCardDeck
     }
   }
-  
+
   async mulligan(body) {
-    
+
     const Players = this.mongoose.model('Players');
-    
+
     let player = await Players.findOne({_id: body.playerID});
     if(player.mulligans > 0){
       const Games = this.mongoose.model('Games');
@@ -521,7 +527,7 @@ class GameService {
       await player.save();
       game.whiteCards = possibleWhiteCards.filter(wc => !newWhiteCards.some(nwc => nwc == wc));
       game = await game.save();
-      
+
       return player;
     } else {
       this.log.info('No mulligans left');
@@ -563,10 +569,25 @@ class GameService {
     */
   }
 
+  async removePlayer(body){
+    const Games = this.mongoose.model('Games');
+    const Rounds = this.mongoose.model('Rounds');
+    let game = await Games.findOne({_id: body.gameID});
+    game.players = game.players.filter(p => p != body.playerID);
+    game = await game.save();
+
+    if(game.rounds.length > 0){
+      let latestRoundId = game.rounds[game.rounds.length - 1];
+      let round = await Rounds.findOne({ _id: latestRoundId });
+      round.players = round.players.filter(p => p != body.playerID);
+      round = await round.save();
+    }
+  }
+
   async parseGame() {
     const https = require('https');
     //https://cah.greencoaststudios.com/api_reference/
-    
+
     https.get('https://cah.greencoaststudios.com/api/v1/official', (resp) => {
       let data = '';
 
@@ -579,9 +600,9 @@ class GameService {
       resp.on('end', () => {
         let setdata = JSON.parse(data).packs;
         setdata.forEach(async s => {
-          const Sets = this.mongoose.model('Sets'); 
+          const Sets = this.mongoose.model('Sets');
           const exists = await Sets.findOne({set_id: s.id});
-          
+
           if(exists){
             this.log.info(exists);
           } else {
@@ -619,7 +640,7 @@ class GameService {
         resp.on('end', () => {
           //this.log.info(JSON.parse(data));
           let { white, black } = JSON.parse(data);
-          
+
           const BlackCards = this.mongoose.model('BlackCards');
           const WhiteCards = this.mongoose.model('WhiteCards');
           
@@ -638,7 +659,7 @@ class GameService {
               blackCard = await blackCard.save();
             }
           });
-          
+
           white.forEach(async w => {
             const exists = await WhiteCards.findOne({set: s._id, text: w});
             if(exists){
@@ -652,7 +673,7 @@ class GameService {
               whiteCard = await whiteCard.save();
             }
           });
-          
+
         });
 
       }).on("error", (err) => {
@@ -662,10 +683,10 @@ class GameService {
 
     return "Let's add some cards.";
   }
-  
+
   async updateCard(body) {
     let { cardType, update, cardID, value } = body;
-    
+
     if(cardType == "bc"){
         const BlackCards = this.mongoose.model('BlackCards');
         let blackCard = await BlackCards.findOne({_id: cardID});
@@ -695,19 +716,19 @@ class GameService {
         }
         return whiteCard;
     }
-    
+
     return "Did not update anything.";
   }
-  
+
   async addCard(body) {
     let { cardType, setID, value, blankCard } = body;
-    
+
     if(cardType == "bc"){
-      
+
 
     } else if(cardType == "wc"){
       const WhiteCards = this.mongoose.model('WhiteCards');
-      
+
       let newCard = new WhiteCards({
         set: setID,
         text: value,
@@ -716,7 +737,7 @@ class GameService {
       newCard = await newCard.save();
       return newCard;
     }
-    
+
     return "Did not update anything.";
   }
 
