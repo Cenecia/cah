@@ -53,12 +53,27 @@ class WS_Messenger {
                 //     await this.say("info", "I'll send you updates for " + msg.player_id);
                 //     this.set_player_id(msg.player_id);
                 //     break;
-                case 'join': //todo: handle rejoin situation?
+                case 'join':
                     this.log.info(`Join message from player ${this.get_player_id()} and game ${msg.payload.gameID}`);
                     const join_data = await this.game_service.joinGame(msg.payload);
                     this.set_player_id(join_data.players[join_data.players.length-1]._id.toString()); //todo: this seems like a bad way to assign IDs
                     await this.say("join", join_data);
                     await this.dispatcher.broadcast_game_data(join_data.players.map(p => p._id.toString()), "update", join_data);
+                    break;
+                case 'rejoin':
+                    this.log.info(`Rejoin message from player ${msg.player_id} and game ${msg.payload.gameID}`);
+                    //todo: make sure game exists and is in session
+                    //kick the ghost, if any
+                    try {
+                        await this.dispatcher.kick_player(msg.player_id); //todo: this could be abused by cloning playerIDs and kicking others
+                    }
+                    catch (e) {
+                        this.log.info(`Remove Ghost raised exception ${e}`);
+                    }
+                    this.set_player_id(msg.player_id);
+                    //say round, client will request hand, everything should be peachy
+                    const rejoin_round = await this.game_service.getLatestRound(msg.payload);
+                    await this.say("round", rejoin_round);
                     break;
                 case 'create':
                     this.log.info(`Create new game message...`);
@@ -166,8 +181,10 @@ class WS_Messenger {
      * Close the connection.
      */
     async close() {
-        await this.socket.close();
-        this.socket = null;
+        if(this.socket !== null) {
+            await this.socket.close();
+            this.socket = null;
+        }
     }
 }
 
@@ -244,8 +261,10 @@ class WS_Dispatcher {
     async kick_player(player_id) {
         this.log.info(`ws kick ${JSON.stringify(player_id)}`);
         const messenger = this.ws_messengers.find(wsm => wsm.get_player_id() === player_id);
-        messenger.close();
-        this.ws_messengers = this.ws_messengers.filter(wsm => wsm.get_player_id() !== player_id)
+        if(messenger !== undefined) {
+            messenger.close();
+            this.ws_messengers = this.ws_messengers.filter(wsm => wsm.get_player_id() !== player_id)
+        }
     }
 
     //todo: cleanup, etc.

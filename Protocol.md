@@ -24,12 +24,21 @@ The client can send the following to the server. The message must be JSON in the
     ```
 
 - join
+- rejoin
+```json
+  "payload":
+  {
+  "gameID":    string containing the game ID,
+  "playerID":   string containining the requesting player's ID,
+  }
+  ```
 - start_round
 - hand
 - submit_white
   ```json
   "payload":
-  {"gameID":    string containing the game ID,
+  {
+  "gameID":    string containing the game ID,
   "roundID":    string containing the round ID,
   "whiteCards": list of whiteCard objects,
   "playerID":   string containining the requesting player's ID,
