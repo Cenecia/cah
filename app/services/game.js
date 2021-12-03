@@ -74,14 +74,19 @@ class GameService {
     return returnMe;
   }
 
-  //games/join
-  async joinGame(body) {
+  /**
+   * Add a player to an existing game.
+   * @param game_id
+   * @param player_name
+   * @returns
+   */
+  async joinGame(game_id, player_name) {
     const Games = this.mongoose.model('Games');
     const Players = this.mongoose.model('Players');
     const Rounds = this.mongoose.model('Rounds');
 
     let newPlayer = new Players({
-      name: body.player,
+      name: player_name,
       hand: [],
       points: 0,
       active: true,
@@ -89,12 +94,12 @@ class GameService {
     });
     newPlayer = await newPlayer.save();
     
-    let game = await Games.findOne({_id: body.gameID});
+    let game = await Games.findOne({_id: game_id});
     game.players.push(newPlayer._id);
     game = await game.save();
-    game = await Games.findOne({_id: body.gameID}).populate('players');
+    game = await Games.findOne({_id: game_id}).populate('players');
 
-    let latestRound = await Rounds.findOne({game: body.gameID, status: "submit"})
+    let latestRound = await Rounds.findOne({game: game_id, status: "submit"})
                                   .populate({
                                     path: 'blackCard',
                                     populate: {

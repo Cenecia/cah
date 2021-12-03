@@ -18,19 +18,6 @@ module.exports.register = (server, serviceLocator) => {
     }
   );
 
-  server.post(
-    {
-      path: '/games/join',
-      name: 'Join Game',
-      version: '1.0.0',
-      validation: {
-        body: require('../validations/create_game')
-      }
-    },
-    (req, res, next) => {
-      serviceLocator.get('gameController').join(req, res, next)
-    }
-  );
 
   server.post(
     {

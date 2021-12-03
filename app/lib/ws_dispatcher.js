@@ -1,5 +1,6 @@
 'use strict';
 
+const wsv = require("./ws_validator");
 const ws = require('ws');
 
 //message schema
@@ -47,18 +48,11 @@ class WS_Messenger {
     async message_handler(incoming){
         try {
             const msg = JSON.parse(incoming);
+            wsv.check(wsv.incoming_message, msg);
             switch(msg.action) {
-                // case 'register':
-                //     await this.say("info", "Hello!");
-                //     await this.say("info", "I'll send you updates for " + msg.player_id);
-                //     this.set_player_id(msg.player_id);
-                //     break;
-                case 'join':
-                    this.log.info(`Join message from player ${this.get_player_id()} and game ${msg.payload.gameID}`);
-                    const join_data = await this.game_service.joinGame(msg.payload);
-                    this.set_player_id(join_data.players[join_data.players.length-1]._id.toString()); //todo: this seems like a bad way to assign IDs
-                    await this.say("join", join_data);
-                    await this.dispatcher.broadcast_game_data(join_data.players.map(p => p._id.toString()), "update", join_data);
+                case 'join_request':
+                    wsv.check(wsv.join_request, msg.payload);
+                    await this.join_request(msg);
                     break;
                 case 'rejoin':
                     this.log.info(`Rejoin message from player ${msg.player_id} and game ${msg.payload.gameID}`);
@@ -123,13 +117,25 @@ class WS_Messenger {
                 case 'refresh':
                     break;
                 default:
-                    this.log.warn(`Unhandled event: ${this.msg}`);
-                    await this.say("info","I don't know what that means.");
+                    this.say_error(`Unhandled event: ${msg.action}`);
             }
         }
         catch(e) {
-            this.log.error("wsd mh: " + e);
+            this.say_error("Error: " + JSON.stringify(e));
         }
+    }
+
+    async join_request(msg) {
+        this.msg_log(this.get_player_id(), msg.payload.game_id);
+        const join_data = await this.game_service.joinGame(msg.payload.game_id, msg.payload.player_name);
+        wsv.check(wsv.join_response, join_data);
+        this.set_player_id(join_data.players[join_data.players.length - 1]._id.toString()); //todo: this seems like a bad way to assign IDs
+        await this.say("join_response", join_data);
+        await this.dispatcher.broadcast_game_data(join_data.players.map(p => p._id.toString()), "update", join_data);
+    }
+
+    msg_log(player_id, game_id, text=''){
+        this.log.info(`Player: ${this.get_player_id()} Game: ${game_id} ${text}`);
     }
 
     /**
@@ -168,7 +174,7 @@ class WS_Messenger {
         if(!this.is_closed()) {
             return this.socket.send(JSON.stringify({
                 action: action,
-                playerID: this.get_player_id(),
+                player_id: this.get_player_id(),
                 payload: payload
             }));
         }
@@ -176,7 +182,23 @@ class WS_Messenger {
             return null;
         }
     }
-
+    /**
+     * Transmits an error message to the player associated with this messenger.
+     * @param error An exception; will be stringified
+     */
+    async say_error(error) {
+        this.log.error(error);
+        if(!this.is_closed()) {
+            return this.socket.send(JSON.stringify({
+                action: "error",
+                player_id: this.get_player_id(),
+                payload: error.message
+            }));
+        }
+        else {
+            return null;
+        }
+    }
     /**
      * Close the connection.
      */
