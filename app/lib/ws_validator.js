@@ -10,26 +10,34 @@ function check (schema, data) {
     }
 }
 
-const incoming_message = joi.object({
+const incomingMessage = joi.object({
     action: joi.string()
         .required(),
     payload: joi.object()
         .required()
 });
 
-const white_card = joi.object({
+const whiteCard = joi.object({
+    _id: joi.string()
+        .length(OBJECTID_LENGTH)
+        .required(),
     set: joi.string()
         .length(OBJECTID_LENGTH)
         .required(),
     text: joi.string()
         .min(1)
         .required(),
-    is_blank: joi.boolean()
+    isBlank: joi.boolean()
         .required()
 });
 
 const player = joi.object({
+    _id: joi.string()
+        .length(OBJECTID_LENGTH)
+        .required(),
     name: joi.string()
+        .min(2)
+        .max(30)
         .required(),
     active: joi.boolean()
         .required(),
@@ -41,33 +49,34 @@ const player = joi.object({
         .integer()
         .min(0)
         .required(),
-    hand: joi.array().items(white_card)
+    hand: joi.array().items(whiteCard)
         .required()
 });
 
-const create_request = joi.object({
-    game_name:joi.string()
+const createRequest = joi.object({
+    name:joi.string()
         .min(2)
         .max(30)
         .required(),
-    player_id: joi.string()
-        .length(OBJECTID_LENGTH)
+    player: joi.string()
+        .min(2)
+        .max(30)
         .required(),
     sets: joi.array()
-        .items(string().length(OBJECTID_LENGTH))
+        .items(joi.string().length(OBJECTID_LENGTH))
         .min(1)
         .required(),
-    time_limit: joi.number()
+    timeLimit: joi.number()
         .integer()
         .min(1)
         .required(),
-    score_limit: joi.number()
+    scoreLimit: joi.number()
         .integer()
         .min(1)
         .required()
 });
 
-const create_response = joi.object({
+const createResponse = joi.object({
     whiteCardCount: joi.number()
         .integer()
         .min(1)
@@ -79,8 +88,8 @@ const create_response = joi.object({
     gameID: joi.string()
         .length(OBJECTID_LENGTH)
         .required(),
-    players: array()
-        .items(player)
+    players: joi.array()
+        .items(joi.string().length(OBJECTID_LENGTH))
         .min(1)
         .required(),
     ownerID: joi.string()
@@ -88,21 +97,21 @@ const create_response = joi.object({
         .required()
 });
 
-const join_request = joi.object({
-    game_id: joi.string()
+const joinRequest = joi.object({
+    gameID: joi.string()
         .length(OBJECTID_LENGTH)
         .required(),
-    player_name: joi.string()
+    playerName: joi.string()
         .min(2)
         .max(30)
         .required()
 });
 
-const join_response = joi.object({
-    game_id: joi.string()
+const joinResponse = joi.object({
+    gameID: joi.string()
         .length(OBJECTID_LENGTH)
         .required(),
-    player_list: joi.array()
+    players: joi.array()
         .items(player)
         .required()
 });
@@ -111,11 +120,11 @@ const join_response = joi.object({
 
 module.exports = {
     check: check,
-    incoming_message: incoming_message,
-    white_card: white_card,
+    incomingMessage: incomingMessage,
+    whiteCard: whiteCard,
     player: player,
-    create_request: create_request,
-    create_response: create_response,
-    join_request: join_request,
-    join_response: join_response
+    createRequest: createRequest,
+    createResponse: createResponse,
+    joinRequest: joinRequest,
+    joinResponse: joinResponse
 };
