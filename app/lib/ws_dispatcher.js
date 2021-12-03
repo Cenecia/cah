@@ -69,11 +69,11 @@ class WS_Messenger {
                     const rejoin_round = await this.game_service.getLatestRound(msg.payload);
                     await this.say("round", rejoin_round);
                     break;
-                case 'create':
+                case 'create_request':
                     this.log.info(`Create new game message...`);
                     const create_data = await this.game_service.createGame(msg.payload);
                     this.set_player_id(create_data.players[create_data.players.length-1]._id.toString()); //todo: this seems like a bad way to assign IDs
-                    await this.say("create", create_data);
+                    await this.say("create_response", create_data);
                     break;
                 case 'start_round':
                     this.log.info(`Start Round message from player ${this.get_player_id()} and game ${msg.payload.gameID}`);

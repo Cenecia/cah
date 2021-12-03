@@ -45,6 +45,48 @@ const player = joi.object({
         .required()
 });
 
+const create_request = joi.object({
+    game_name:joi.string()
+        .min(2)
+        .max(30)
+        .required(),
+    player_id: joi.string()
+        .length(OBJECTID_LENGTH)
+        .required(),
+    sets: joi.array()
+        .items(string().length(OBJECTID_LENGTH))
+        .min(1)
+        .required(),
+    time_limit: joi.number()
+        .integer()
+        .min(1)
+        .required(),
+    score_limit: joi.number()
+        .integer()
+        .min(1)
+        .required()
+});
+
+const create_response = joi.object({
+    whiteCardCount: joi.number()
+        .integer()
+        .min(1)
+        .required(),
+    blackCardCount: joi.number()
+        .integer()
+        .min(1)
+        .required(),
+    gameID: joi.string()
+        .length(OBJECTID_LENGTH)
+        .required(),
+    players: array()
+        .items(player)
+        .min(1)
+        .required(),
+    ownerID: joi.string()
+        .length(OBJECTID_LENGTH)
+        .required()
+});
 
 const join_request = joi.object({
     game_id: joi.string()
@@ -60,7 +102,8 @@ const join_response = joi.object({
     game_id: joi.string()
         .length(OBJECTID_LENGTH)
         .required(),
-    player_list: joi.array().items(player)
+    player_list: joi.array()
+        .items(player)
         .required()
 });
 
@@ -71,6 +114,8 @@ module.exports = {
     incoming_message: incoming_message,
     white_card: white_card,
     player: player,
+    create_request: create_request,
+    create_response: create_response,
     join_request: join_request,
     join_response: join_response
 };
