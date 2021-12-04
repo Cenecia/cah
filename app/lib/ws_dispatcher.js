@@ -70,10 +70,8 @@ class WS_Messenger {
                     await this.say("round", rejoin_round);
                     break;
                 case 'createRequest':
-                    this.log.info(`Create new game message...`);
-                    const create_data = await this.gameService.createGame(msg.payload);
-                    this.setPlayerID(create_data.players[create_data.players.length-1]._id.toString()); //todo: this seems like a bad way to assign IDs
-                    await this.say("createResponse", create_data);
+                    wsv.check(wsv.createRequest, msg.payload);
+                    await this.createRequest(msg);
                     break;
                 case 'startRound':
                     this.log.info(`Start Round message from player ${this.getPlayerID()} and game ${msg.payload.gameID}`);
@@ -125,8 +123,16 @@ class WS_Messenger {
         }
     }
 
+    async createRequest(msg) {
+        this.msg_log(this.getPlayerID(), msg.payload.gameID, "CreateRequest");
+        const create_data = await this.gameService.createGame(msg.payload);
+        wsv.check(wsv.createResponse, create_data);
+        this.setPlayerID(create_data.players[create_data.players.length - 1]._id.toString()); //todo: this seems like a bad way to assign IDs
+        await this.say("createResponse", create_data);
+    }
+
     async joinRequest(msg) {
-        this.msg_log(this.getPlayerID(), msg.payload.gameID);
+        this.msg_log(this.getPlayerID(), msg.payload.gameID, "JoinRequest");
         const join_data = await this.gameService.joinGame(msg.payload.gameID, msg.payload.playerName);
         wsv.check(wsv.joinResponse, join_data);
         this.setPlayerID(join_data.players[join_data.players.length - 1]._id.toString()); //todo: this seems like a bad way to assign IDs
