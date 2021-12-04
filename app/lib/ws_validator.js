@@ -17,19 +17,35 @@ const incomingMessage = joi.object({
         .required()
 });
 
+const cardSet = joi.object({
+    _id: joi.string()
+        .length(OBJECTID_LENGTH)
+        .required(),
+    name: joi.string()
+        .min(1)
+        .max(30)
+        .required(),
+    set_id: joi.string()
+        .min(1)
+        .max(30)
+        .required()
+})
+
 const whiteCard = joi.object({
     _id: joi.string()
         .length(OBJECTID_LENGTH)
         .required(),
-    set: joi.string()
-        .length(OBJECTID_LENGTH)
+    set: cardSet
         .required(),
     text: joi.string()
         .min(1)
         .required(),
-    isBlank: joi.boolean()
+    blankCard: joi.boolean()
         .required()
 });
+
+const playerHand = joi.array().items(whiteCard)
+    .required()
 
 const player = joi.object({
     _id: joi.string()
@@ -49,7 +65,7 @@ const player = joi.object({
         .integer()
         .min(0)
         .required(),
-    hand: joi.array().items(whiteCard)
+    hand: playerHand
         .required()
 });
 
@@ -79,11 +95,11 @@ const createRequest = joi.object({
 const createResponse = joi.object({
     whiteCardCount: joi.number()
         .integer()
-        .min(1)
+        .min(0)
         .required(),
     blackCardCount: joi.number()
         .integer()
-        .min(1)
+        .min(0)
         .required(),
     gameID: joi.string()
         .length(OBJECTID_LENGTH)
@@ -116,7 +132,39 @@ const joinResponse = joi.object({
         .required()
 });
 
+const handRequest = joi.object({
+    playerID: joi.string()
+        .length(OBJECTID_LENGTH)
+        .required(),
+    gameID: joi.string()
+        .length(OBJECTID_LENGTH)
+        .required()
+});
 
+//this is basically the Player object but with an array of cards attached
+const handResponse = joi.object({
+    _id: joi.string()
+        .length(OBJECTID_LENGTH)
+        .required(),
+    name: joi.string()
+        .min(2)
+        .max(30)
+        .required(),
+    active: joi.boolean()
+        .required(),
+    points: joi.number()
+        .integer()
+        .min(0)
+        .required(),
+    mulligans: joi.number()
+        .integer()
+        .min(0)
+        .required(),
+    hand: joi.array()
+        .items(whiteCard)
+        .min(0)
+        .required(),
+})
 
 module.exports = {
     check: check,
@@ -126,5 +174,8 @@ module.exports = {
     createRequest: createRequest,
     createResponse: createResponse,
     joinRequest: joinRequest,
-    joinResponse: joinResponse
+    joinResponse: joinResponse,
+    handRequest: handRequest,
+    handResponse: handResponse,
+    cardSet: cardSet
 };

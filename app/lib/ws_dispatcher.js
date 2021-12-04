@@ -83,10 +83,9 @@ class WS_Messenger {
                 //     const round_data = await this.game_service.getLatestRound(msg.payload);
                 //     await this.dispatcher.broadcast_game_data(round_data.players.map(p => p._id.toString()), "round", round_data);
                 //     break;
-                case 'hand':
-                    this.log.info(`Hand message from player ${this.getPlayerID()}`);
-                    const hand_data = await this.gameService.getHand(msg.payload);
-                    await this.say("hand", hand_data);
+                case 'handRequest':
+                    wsv.check(wsv.handRequest);
+                    await this.getHand(msg);
                     break;
                 case 'mulligan':
                     this.log.info(`Hand message from player ${this.getPlayerID()}`);
@@ -121,6 +120,13 @@ class WS_Messenger {
         catch(e) {
             await this.say_error("Error: " + JSON.stringify(e));
         }
+    }
+
+    async getHand(msg) {
+        this.msg_log(this.getPlayerID(), msg.payload.gameID, "HandRequest");
+        const hand_data = await this.gameService.getHand(msg.payload);
+        wsv.check(wsv.handResponse);
+        await this.say("handResponse", hand_data);
     }
 
     async createRequest(msg) {
