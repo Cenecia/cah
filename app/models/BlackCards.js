@@ -11,4 +11,6 @@ const blackCardSchema = new mongoose.Schema({
   pick: { type: Number }
 });
 
+blackCardSchema.set('toObject', { getters: true });
+
 module.exports = mongoose.model('BlackCards', blackCardSchema);

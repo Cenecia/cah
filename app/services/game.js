@@ -108,11 +108,14 @@ class GameService {
                                       model: 'Sets'
                                     }
                                   });
+    if(latestRound) {
+      latestRound = latestRound.toObject();
+    }
 
     let returnMe = {
       whiteCardCount: game.whiteCards.length,
       blackCardCount: game.blackCards.length,
-      gameID: game._id,
+      gameID: game.id,
       players: game.players,
       rounds: game.rounds,
       latestRound: latestRound,
@@ -130,7 +133,7 @@ class GameService {
    
     let game = await Games.findOne({_id: body.gameID}).populate('players').populate('winner');
     
-    return game;
+    return game.toObject;
   }
 
   //games/startRound
@@ -347,17 +350,17 @@ class GameService {
   }
 
   //games/getHand
-  async getHand (body){
+  async getHand (playerID){
     const Players = this.mongoose.model('Players');
 
-    let player = await Players.findOne({_id: body.playerID}).populate('hand').populate({
+    let player = await Players.findOne({_id: playerID}).populate('hand').populate({
      path: 'hand',
      populate: {
        path: 'set',
        model: 'Sets'
      }});
 
-    return player;
+    return player.toObject();
   }
 
   //games/getRound
@@ -449,34 +452,34 @@ class GameService {
     const BlackCards = this.mongoose.model('BlackCards');
     const WhiteCards = this.mongoose.model('WhiteCards');
 
-    let blackCardDeck = await BlackCards.find().populate('set');
-    let whiteCardDeck = await WhiteCards.find().populate('set');
+    let blackCardDeck = (await BlackCards.find().populate('set'));
+    let whiteCardDeck = (await WhiteCards.find().populate('set'));
 
     let sets = [];
 
     blackCardDeck.forEach(bc => {
-      if(!sets.some(s => s.id.toString() == bc.set._id.toString())){
+      if(!sets.some(s => s.id === bc.set.id)){
         sets.push({
-          id: bc.set._id.toString(),
+          id: bc.set.id,
           name: bc.set.name,
           blackCardCount: 1,
           whiteCardCount: 0
         })
       } else {
-        sets.find(s => s.id.toString() == bc.set._id.toString()).blackCardCount++;
+        sets.find(s => s.id === bc.set.id).blackCardCount++;
       }
     });
 
     whiteCardDeck.forEach(wc => {
-      if(!sets.some(s => s.id.toString() == wc.set._id.toString())){
+      if(!sets.some(s => s.id === wc.set.id)){
         sets.push({
-          id: wc.set._id.toString(),
+          id: wc.set.id,
           name: wc.set.name,
           blackCardCount: 0,
           whiteCardCount: 1
         })
       } else {
-        sets.find(s => s.id.toString() == wc.set._id.toString()).whiteCardCount++;
+        sets.find(s => s.id === wc.set.id).whiteCardCount++;
       }
     });
 

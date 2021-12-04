@@ -129,7 +129,7 @@ class WS_Messenger {
 
     async getHand(msg) {
         this.msg_log(this.getPlayerID(), msg.payload.gameID, "HandRequest");
-        const hand_data = await this.gameService.getHand(msg.payload);
+        const hand_data = await this.gameService.getHand(msg.payload.playerID);
         wsv.check(wsv.handResponse);
         await this.say("handResponse", hand_data);
     }
