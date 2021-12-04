@@ -84,7 +84,7 @@ class WS_Messenger {
                 //     await this.dispatcher.broadcast_game_data(round_data.players.map(p => p._id.toString()), "round", round_data);
                 //     break;
                 case 'handRequest':
-                    wsv.check(wsv.handRequest);
+                    wsv.check(wsv.handRequest, msg.payload);
                     await this.getHand(msg);
                     break;
                 case 'mulligan':
@@ -118,7 +118,12 @@ class WS_Messenger {
             }
         }
         catch(e) {
-            await this.say_error("Error: " + JSON.stringify(e));
+            if(e.hasOwnProperty("message")) {
+                await this.say_error("Exception: " + e.message);
+            }
+            else {
+                await this.say_error("Error: " + e.toString());
+            }
         }
     }
 

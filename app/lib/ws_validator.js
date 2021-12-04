@@ -3,60 +3,46 @@ const joi = require("joi");
 const OBJECTID_LENGTH = 24; //twelve hexadecimal bytes
 
 function check (schema, data) {
-    try {
-        schema.validate(data);
-    } catch (e) {
-        throw new Error(`Validation Failure: ${e.message || "???"}. Raw: ${JSON.stringify(e)}`);
+    let result = schema.validate(data,{allowUnknown: true, convert: true} )
+    if(result.error !== null) {
+        throw new Error(`Validation Failure: ${result.error.message || "???"}. Raw: ${JSON.stringify(result.error)}`);
     }
 }
 
+const normalID = joi.string()
+    .length(OBJECTID_LENGTH);
+
+const limitedString = joi.string()
+    .min(2)
+    .max(30);
+
 const incomingMessage = joi.object({
-    action: joi.string()
-        .required(),
-    payload: joi.object()
-        .required()
+    action: joi.string().required(),
+    payload: joi.object().required(),
+    playerID: normalID.allow('').allow(null).optional()
 });
 
 const cardSet = joi.object({
-    _id: joi.string()
-        .length(OBJECTID_LENGTH)
-        .required(),
-    name: joi.string()
-        .min(1)
-        .max(30)
-        .required(),
-    set_id: joi.string()
-        .min(1)
-        .max(30)
-        .required()
+    id: normalID.required(),
+    name: limitedString.required(),
+    set_id: limitedString.required()
 })
 
 const whiteCard = joi.object({
-    _id: joi.string()
-        .length(OBJECTID_LENGTH)
-        .required(),
-    set: cardSet
-        .required(),
+    id: normalID.required(),
+    set: cardSet.required(),
     text: joi.string()
         .min(1)
         .required(),
-    blankCard: joi.boolean()
-        .required()
+    blankCard: joi.boolean().required()
 });
 
-const playerHand = joi.array().items(whiteCard)
-    .required()
+const playerHand = joi.array().items(whiteCard).required()
 
 const player = joi.object({
-    _id: joi.string()
-        .length(OBJECTID_LENGTH)
-        .required(),
-    name: joi.string()
-        .min(2)
-        .max(30)
-        .required(),
-    active: joi.boolean()
-        .required(),
+    id: normalID.required(),
+    name: limitedString.required(),
+    active: joi.boolean().required(),
     points: joi.number()
         .integer()
         .min(0)
@@ -70,23 +56,17 @@ const player = joi.object({
 });
 
 const createRequest = joi.object({
-    name:joi.string()
-        .min(2)
-        .max(30)
-        .required(),
-    player: joi.string()
-        .min(2)
-        .max(30)
-        .required(),
+    name:limitedString.required(),
+    player: limitedString.required(),
     sets: joi.array()
-        .items(joi.string().length(OBJECTID_LENGTH))
+        .items(normalID)
         .min(1)
         .required(),
-    timeLimit: joi.number()
+    time_limit: joi.number()
         .integer()
         .min(1)
         .required(),
-    scoreLimit: joi.number()
+    score_limit: joi.number()
         .integer()
         .min(1)
         .required()
@@ -101,55 +81,35 @@ const createResponse = joi.object({
         .integer()
         .min(0)
         .required(),
-    gameID: joi.string()
-        .length(OBJECTID_LENGTH)
-        .required(),
+    gameID: normalID.required(),
     players: joi.array()
-        .items(joi.string().length(OBJECTID_LENGTH))
+        .items(player)
         .min(1)
         .required(),
-    ownerID: joi.string()
-        .length(OBJECTID_LENGTH)
-        .required()
+    ownerID: normalID.required()
 });
 
 const joinRequest = joi.object({
-    gameID: joi.string()
-        .length(OBJECTID_LENGTH)
-        .required(),
-    playerName: joi.string()
-        .min(2)
-        .max(30)
-        .required()
+    gameID: normalID.required(),
+    playerName: limitedString.required()
 });
 
 const joinResponse = joi.object({
-    gameID: joi.string()
-        .length(OBJECTID_LENGTH)
-        .required(),
+    gameID: normalID.required(),
     players: joi.array()
         .items(player)
         .required()
 });
 
 const handRequest = joi.object({
-    playerID: joi.string()
-        .length(OBJECTID_LENGTH)
-        .required(),
-    gameID: joi.string()
-        .length(OBJECTID_LENGTH)
-        .required()
+    playerID: normalID.required(),
+    gameID: normalID.required()
 });
 
 //this is basically the Player object but with an array of cards attached
 const handResponse = joi.object({
-    _id: joi.string()
-        .length(OBJECTID_LENGTH)
-        .required(),
-    name: joi.string()
-        .min(2)
-        .max(30)
-        .required(),
+    id: normalID.required(),
+    name: limitedString.required(),
     active: joi.boolean()
         .required(),
     points: joi.number()

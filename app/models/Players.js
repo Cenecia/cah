@@ -13,4 +13,6 @@ const playerSchema = new mongoose.Schema({
   mulligans: { type: Number },
 });
 
+playerSchema.set('toObject', { getters: true });
+
 module.exports = mongoose.model('Players', playerSchema);

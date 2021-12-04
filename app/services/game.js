@@ -60,13 +60,14 @@ class GameService {
 
     newGame = await newGame.save();
     newGame = await Games.findOne({_id: newGame._id}).populate('players');
+    newGame = newGame.toObject();
 
     let returnMe = {
       whiteCardCount: newGame.whiteCards.length,
       blackCardCount: newGame.blackCards.length,
-      gameID: newGame._id,
+      gameID: newGame.id,
       players: newGame.players,
-      owner: newGame.owner
+      ownerID: newGame.owner
     };
 
     this.log.info('New game created.');
