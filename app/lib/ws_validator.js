@@ -159,6 +159,11 @@ const joinRequest = joi.object({
     playerName: limitedString.required()
 });
 
+const rejoinRequest = joi.object({
+    gameID: normalID.required(),
+    playerID: normalID.required()
+});
+
 const joinResponse = joi.object({
     gameID: normalID.required(),
     owner: normalID.required(),
@@ -242,6 +247,7 @@ module.exports = {
     createRequest: createRequest,
     createResponse: createResponse,
     joinRequest: joinRequest,
+    rejoinRequest: rejoinRequest,
     joinResponse: joinResponse,
     handRequest: handRequest,
     handResponse: handResponse,

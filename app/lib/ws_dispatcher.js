@@ -53,20 +53,9 @@ class WS_Messenger {
                     msg.payload = wsv.checkAndClean(wsv.joinRequest, msg.payload);
                     await this.joinRequest(msg);
                     break;
-                case 'rejoin':
-                    this.log.info(`Rejoin message from player ${msg.playerID} and game ${msg.payload.gameID}`);
-                    //todo: make sure game exists and is in session
-                    //kick the ghost, if any
-                    try {
-                        await this.dispatcher.kickPlayer(msg.playerID); //todo: this could be abused by cloning playerIDs and kicking others
-                    }
-                    catch (e) {
-                        this.log.info(`Remove Ghost raised exception ${e}`);
-                    }
-                    this.setPlayerID(msg.playerID);
-                    //say round, client will request hand, everything should be peachy
-                    const rejoin_round = await this.gameService.getLatestRound(msg.payload.gameID);
-                    await this.say("round", rejoin_round);
+                case 'rejoinRequest':
+                    msg.payload = wsv.checkAndClean(wsv.rejoinRequest, msg.payload);
+                    await this.rejoinRequest(msg);
                     break;
                 case 'createRequest':
                     msg.payload = wsv.checkAndClean(wsv.createRequest, msg.payload);
@@ -113,6 +102,21 @@ class WS_Messenger {
                 await this.say_error("Error: " + e.toString());
             }
         }
+    }
+
+    async rejoinRequest(msg) {
+        this.log.info(`Rejoin message from player ${msg.payload.playerID} and game ${msg.payload.gameID}`);
+        //todo: make sure game exists and is in session
+        //kick the ghost, if any
+        try {
+            await this.dispatcher.kickPlayer(msg.payload.playerID); //todo: this could be abused by cloning playerIDs and kicking others
+        } catch (e) {
+            this.log.info(`Remove Ghost raised exception ${e}`);
+        }
+        this.setPlayerID(msg.payload.playerID);
+        //say round, client will request hand, everything should be peachy
+        const rejoin_round = wsv.checkAndClean(wsv.roundResponse, await this.gameService.getLatestRound(msg.payload.gameID));
+        await this.say("round", rejoin_round);
     }
 
     async mulligan(msg) {
