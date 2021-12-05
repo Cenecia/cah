@@ -9,7 +9,7 @@ const mongoose = serviceLocator.get('mongoose');
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const candidateCardSchema = new mongoose.Schema({
-  player: { type: ObjectId, required: true, ref: "Players" },
+  player: { type: ObjectId, required: true, ref: "Players", get: v => v.toString() },
   cards: [{ type: String }],
   winner: { type: Boolean, default: false },
   playerName: { type: String }

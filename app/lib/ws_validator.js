@@ -49,6 +49,20 @@ const blackCard = joi.object({
     set: cardSet.required()
 });
 
+const candidateCards = joi.array().items(
+    joi.object({
+        cards: joi.array()
+            .items(joi.string()
+                .min(1))
+            .min(0)
+            .required(),
+        winner: joi.boolean().required(),
+        player: normalID.required(),
+        id: normalID
+    })
+);
+
+
 const playerHand = joi.array().items(whiteCard).required()
 
 const player = joi.object({
@@ -170,6 +184,18 @@ const handResponse = joi.object({
         .required(),
 });
 
+const submitWhiteRequest = joi.object({
+    roundID: normalID.required(),
+    playerID: normalID.required(),
+    whiteCards: joi.array()
+        .items(joi.object({
+            cardID: normalID.required(),
+            cardText: joi.string().allow("").required()
+        }))
+        .min(1)
+        .required()
+});
+
 const startRoundRequest = joi.object({
     gameID: normalID.required()
 });
@@ -182,10 +208,7 @@ const roundResponse = joi.object({
     status: limitedString.required(),
     blackCard: blackCard.required(),
     game: game.required(),
-    candidateCards: joi.array()
-        .items(whiteCard)
-        .min(0)
-        .required(),
+    candidateCards: candidateCards,
     czar: normalID.required(),
     startTime: joi.date().required(),
     winner: player.optional()
@@ -203,6 +226,7 @@ module.exports = {
     joinResponse: joinResponse,
     handRequest: handRequest,
     handResponse: handResponse,
+    submitWhiteRequest: submitWhiteRequest,
     startRoundRequest: startRoundRequest,
     roundResponse: roundResponse,
     cardSet: cardSet

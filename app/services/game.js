@@ -214,13 +214,13 @@ class GameService {
   }
 
   //games/submitWhiteCard
-  async submitWhiteCard (body){
+  async submitWhiteCard (playerID, roundID, whiteCards){
     const Games = this.mongoose.model('Games');
     const Rounds = this.mongoose.model('Rounds');
     const Players = this.mongoose.model('Players');
     const WhiteCards = this.mongoose.model('WhiteCards');
 
-    let round = await Rounds.findOne({_id: body.roundID}).populate('players');
+    let round = await Rounds.findOne({_id: roundID}).populate('players');
 
     if(round.status !== 'submit'){
       //They somehow submitted a card after all cards were submitted
@@ -228,7 +228,7 @@ class GameService {
       return 'All White Cards submitted';
     }
 
-    if(round.candidateCards.some(card => card.player == body.playerID)){
+    if(round.candidateCards.some(card => card.player == playerID)){
       //They somehow submitted a
       this.log.info('Already submitted a card');
       return 'Already submitted a card';
@@ -237,11 +237,11 @@ class GameService {
     var candidateCards = [];
     
     //Get the white cards and add the text as a candidate card
-    for (let index = 0; index < body.whiteCards.length; index++) {
+    for (let index = 0; index < whiteCards.length; index++) {
       this.log.info('White card submitted');
-      let candidateCard = await WhiteCards.findOne({_id:body.whiteCards[index].cardID});
+      let candidateCard = await WhiteCards.findOne({_id:whiteCards[index].cardID});
       if(candidateCard.blankCard){
-        candidateCards.push(body.whiteCards[index].cardText);
+        candidateCards.push(whiteCards[index].cardText);
       } else {
         candidateCards.push(candidateCard.text);
       }
@@ -249,7 +249,7 @@ class GameService {
 
     //Add the candidate cards to the round, tied to the player
     round.candidateCards.push({
-      player: body.playerID,
+      player: playerID,
       cards: candidateCards
     });
 
@@ -260,10 +260,10 @@ class GameService {
 
     let game = await Games.findOne({_id: round.game});
 
-    let player = await Players.findOne({_id: body.playerID});
+    let player = await Players.findOne({_id: playerID});
 
     //remove the submitted white cards from the player's hand
-    body.whiteCards.forEach(async whiteCard => {
+    whiteCards.forEach(async whiteCard => {
       player.hand = player.hand.filter(o => o._id != whiteCard.cardID);
     });
 
@@ -285,7 +285,7 @@ class GameService {
     }
     round = await round.save();
 
-    round = await Rounds.findOne({_id: body.roundID})
+    round = await Rounds.findOne({_id: roundID})
                           .populate('players')
                           .populate('game')
                           .populate({

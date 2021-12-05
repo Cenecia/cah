@@ -87,10 +87,8 @@ class WS_Messenger {
                     await this.say("hand", mulligan_data);
                     break;
                 case 'submitWhite':
-                    this.log.info(`Submit White message from player ${this.getPlayerID()} and game ${msg.payload.gameID}`);
-                    const white_data = await this.gameService.submitWhiteCard(msg.payload);
-                    await this.say("hand", white_data.players.find(p => p.id === this.getPlayerID()).hand);
-                    await this.dispatcher.broadcastGameData(white_data.players.map(p => p.id), "round", white_data);
+                    msg.payload = wsv.check(wsv.submitWhiteRequest, msg.payload);
+                    await this.submitWhite(msg);
                     break;
                 case 'selectCandidate':
                     this.log.info(`Select candidate message from player ${this.getPlayerID()} and game ${msg.payload.gameID}`);
@@ -119,6 +117,14 @@ class WS_Messenger {
                 await this.say_error("Error: " + e.toString());
             }
         }
+    }
+
+    async submitWhite(msg) {
+        this.log.info(`Submit White message from player ${this.getPlayerID()} and game ${msg.payload.gameID}`);
+        const white_data = wsv.check(wsv.roundResponse,
+            await this.gameService.submitWhiteCard(msg.payload.playerID, msg.payload.roundID, msg.payload.whiteCards));
+        await this.say("hand", white_data.players.find(p => p.id === this.getPlayerID()).hand);
+        await this.dispatcher.broadcastGameData(white_data.players.map(p => p.id), "round", white_data);
     }
 
     async startRound(msg) {
