@@ -2,7 +2,15 @@ const joi = require("joi");
 
 const OBJECTID_LENGTH = 24; //twelve hexadecimal bytes
 
-function check (schema, data) {
+/**
+ * Validates data using schema, removing unrecognized fields. Throws and exception if validation fails. Returns
+ * the cleaned value.
+ *
+ * @param schema
+ * @param data
+ * @returns {*}
+ */
+function checkAndClean (schema, data) {
     let result = schema.validate(data,{allowUnknown: true, convert: true, stripUnknown: true} )
     if(result.error !== null) {
         throw new Error(`Validation Failure: ${result.error.message || "???"}. Raw: ${JSON.stringify(result.error)}`);
@@ -221,7 +229,7 @@ const roundResponse = joi.object({
 });
 
 module.exports = {
-    check: check,
+    checkAndClean: checkAndClean,
     incomingMessage: incomingMessage,
     whiteCard: whiteCard,
     blackCard: blackCard,
