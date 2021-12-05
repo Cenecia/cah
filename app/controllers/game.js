@@ -22,89 +22,12 @@ class GameController {
     }
   }
 
-  //startRound
-  async startRound(req, res) {
-    try {
-      const {body} = req;
-      const result = await this.gameService.startRound(body);
-
-      res.send(result);
-    } catch (err) {
-      this.log.error(err.message);
-      res.send(err);
-    }
-  }
-
-  //submitWhiteCard
-  async submitWhiteCard(req, res) {
-    try {
-      const {body} = req;
-      const result = await this.gameService.submitWhiteCard(body);
-
-      res.send(result);
-    } catch (err) {
-      this.log.error(err.message);
-      res.send(err);
-    }
-  }
-
-  //getHand
-  async getHand(req, res) {
-    try {
-      const {body} = req;
-      const result = await this.gameService.getHand(body);
-
-      res.send(result);
-    } catch (err) {
-      this.log.error(err.message);
-      res.send(err);
-    }
-  }
 
   //getRound
   async getRound(req, res) {
     try {
       const {body} = req;
       const result = await this.gameService.getRound(body);
-
-      res.send(result);
-    } catch (err) {
-      this.log.error(err.message);
-      res.send(err);
-    }
-  }
-
-  //getLatestRound
-  async getLatestRound(req, res) {
-    try {
-      const {body} = req;
-      const result = await this.gameService.getLatestRound(body);
-
-      res.send(result);
-    } catch (err) {
-      this.log.error(err.message);
-      res.send(err);
-    }
-  }
-
-  //selectCandidateCard
-  async selectCandidateCard(req, res) {
-    try {
-      const {body} = req;
-      const result = await this.gameService.selectCandidateCard(body);
-
-      res.send(result);
-    } catch (err) {
-      this.log.error(err.message);
-      res.send(err);
-    }
-  }
-  
-  //removePlayer
-  async removePlayer(req, res) {
-    try {
-      const {body} = req;
-      const result = await this.gameService.removePlayer(body);
 
       res.send(result);
     } catch (err) {
@@ -141,19 +64,6 @@ class GameController {
   async getAllCards(req, res) {
     try {
       const result = await this.gameService.getAllCards();
-
-      res.send(result);
-    } catch (err) {
-      this.log.error(err.message);
-      res.send(err);
-    }
-  }
-  
-  //getAllCards
-  async mulligan(req, res) {
-    try {
-      const {body} = req;
-      const result = await this.gameService.mulligan(body);
 
       res.send(result);
     } catch (err) {
