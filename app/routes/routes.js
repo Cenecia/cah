@@ -5,18 +5,6 @@
 module.exports.register = (server, serviceLocator) => {
 
 
-
-  server.post(
-    {
-      path: '/games/getGame',
-      name: 'Get Game',
-      version: '1.0.0'
-    },
-    (req, res, next) => {
-      serviceLocator.get('gameController').getGame(req, res, next)
-    }
-  );
-
   //getRound
   server.post(
     {

@@ -86,6 +86,15 @@ const getAllSetsResponse = joi.array()
         blackCardCount: positiveInteger.required(),
     }));
 
+const getGameRequest = joi.object({
+    gameID: normalID.required()
+});
+
+const getGameResponse = joi.object({
+    id: normalID.required(),
+    name: limitedString.required()
+});
+
 const player = joi.object({
     id: normalID.required(),
     name: limitedString.required(),
@@ -251,6 +260,8 @@ module.exports = {
     player: player,
     getAllSetsRequest: getAllSetsRequest,
     getAllSetsResponse: getAllSetsResponse,
+    getGameRequest: getGameRequest,
+    getGameResponse: getGameResponse,
     createRequest: createRequest,
     createResponse: createResponse,
     joinRequest: joinRequest,

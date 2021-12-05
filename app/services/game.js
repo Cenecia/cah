@@ -114,10 +114,10 @@ class GameService {
     return returnMe;
   }
 
-  async getGame(body){
+  async getGame(gameID){
     const Games = this.mongoose.model('Games');
    
-    let game = await Games.findOne({_id: body.gameID}).populate('players').populate('winner');
+    let game = await Games.findOne({_id: gameID}).populate('players').populate('winner');
     
     return game.toObject();
   }
