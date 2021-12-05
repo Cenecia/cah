@@ -3,13 +3,6 @@
 const wsv = require("./ws_validator");
 const ws = require('ws');
 
-//message schema
-//  message = {
-//      gameID: String,
-//      action: String,
-//      data: String
-//  }
-//let ws_messengers = [];
 
 class WS_Messenger {
     /**
@@ -41,7 +34,7 @@ class WS_Messenger {
 
     /**
      * Handles incoming WebSocket message payloads.
-     * todo: validation of identifiers and payloads, better security
+     * TODO: better security
      * @param incoming
      */
     async messageHandler(incoming){
@@ -105,11 +98,11 @@ class WS_Messenger {
     }
 
     async rejoinRequest(msg) {
-        this.log.info(`Rejoin message from player ${msg.payload.playerID} and game ${msg.payload.gameID}`);
-        //todo: make sure game exists and is in session
+        this.msg_log(this.getPlayerID(), msg.payload.gameID, "rejoinRequest");
+        //TODO: make sure game exists and is in session
         //kick the ghost, if any
         try {
-            await this.dispatcher.kickPlayer(msg.payload.playerID); //todo: this could be abused by cloning playerIDs and kicking others
+            await this.dispatcher.kickPlayer(msg.payload.playerID); //TODO: this could be abused by cloning playerIDs and kicking others
         } catch (e) {
             this.log.info(`Remove Ghost raised exception ${e}`);
         }
@@ -120,7 +113,7 @@ class WS_Messenger {
     }
 
     async mulligan(msg) {
-        this.log.info(`Hand message from player ${this.getPlayerID()}`);
+        this.msg_log(this.getPlayerID(), msg.payload.gameID, "mulligan");
         if(await this.gameService.mulligan(msg.payload.playerID, msg.payload.gameID)) {
             const hand_data = wsv.checkAndClean(wsv.handResponse, await this.gameService.getHand(msg.payload.playerID));
             await this.say("handResponse", hand_data);
@@ -131,14 +124,14 @@ class WS_Messenger {
     }
 
     async selectCandidate(msg) {
-        this.log.info(`Select candidate message from player ${this.getPlayerID()} and game ${msg.payload.gameID}`);
+        this.msg_log(this.getPlayerID(), msg.payload.gameID, "selectCandidate");
         await this.gameService.selectCandidateCard(msg.payload.gameID, msg.payload.playerID, msg.payload.roundID);
         const select_data = wsv.checkAndClean(wsv.roundResponse, await this.gameService.getLatestRound(msg.payload.gameID));
         await this.dispatcher.broadcastGameData(select_data.players.map(p => p.id), "round", select_data);
     }
 
     async submitWhite(msg) {
-        this.log.info(`Submit White message from player ${this.getPlayerID()} and game ${msg.payload.gameID}`);
+        this.msg_log(this.getPlayerID(), msg.payload.gameID, "submitWhite");
         const white_data = wsv.checkAndClean(wsv.roundResponse,
             await this.gameService.submitWhiteCard(msg.payload.playerID, msg.payload.roundID, msg.payload.whiteCards));
         await this.say("hand", white_data.players.find(p => p.id === this.getPlayerID()).hand);
@@ -146,7 +139,7 @@ class WS_Messenger {
     }
 
     async startRound(msg) {
-        this.log.info(`Start Round message from player ${this.getPlayerID()} and game ${msg.payload.gameID}`);
+        this.msg_log(this.getPlayerID(), msg.payload.gameID, "startRound");
         const start_data = wsv.checkAndClean(wsv.roundResponse, await this.gameService.startRound(msg.payload.gameID));
         await this.dispatcher.broadcastGameData(start_data.players.map(p => p.id), "round", start_data);
     }
@@ -160,18 +153,24 @@ class WS_Messenger {
     async createRequest(msg) {
         this.msg_log(this.getPlayerID(), msg.payload.gameID, "CreateRequest");
         const create_data = wsv.checkAndClean(wsv.createResponse, await this.gameService.createGame(msg.payload));
-        this.setPlayerID(create_data.players[create_data.players.length - 1].id); //todo: this seems like a bad way to assign IDs
+        this.setPlayerID(create_data.players[create_data.players.length - 1].id); //TODO: this seems like a bad way to assign IDs
         await this.say("createResponse", create_data);
     }
 
     async joinRequest(msg) {
         this.msg_log(this.getPlayerID(), msg.payload.gameID, "JoinRequest");
         const join_data = wsv.checkAndClean(wsv.joinResponse, await this.gameService.joinGame(msg.payload.gameID, msg.payload.playerName));
-        this.setPlayerID(join_data.players[join_data.players.length - 1].id); //todo: this seems like a bad way to assign IDs
+        this.setPlayerID(join_data.players[join_data.players.length - 1].id); //TODO: this seems like a bad way to assign IDs
         await this.say("joinResponse", join_data);
         await this.dispatcher.broadcastGameData(join_data.players.map(p => p.id), "update", join_data);
     }
 
+    /**
+     * Convenience function to make a log entry.
+     * @param player_id
+     * @param game_id
+     * @param text
+     */
     msg_log(player_id, game_id, text=''){
         this.log.info(`Player: ${this.getPlayerID()} Game: ${game_id} ${text}`);
     }
@@ -327,7 +326,6 @@ class WS_Dispatcher {
         }
     }
 
-    //todo: cleanup, etc.
 }
 
 
