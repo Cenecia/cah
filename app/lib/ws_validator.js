@@ -3,10 +3,11 @@ const joi = require("joi");
 const OBJECTID_LENGTH = 24; //twelve hexadecimal bytes
 
 function check (schema, data) {
-    let result = schema.validate(data,{allowUnknown: true, convert: true} )
+    let result = schema.validate(data,{allowUnknown: true, convert: true, stripUnknown: true} )
     if(result.error !== null) {
         throw new Error(`Validation Failure: ${result.error.message || "???"}. Raw: ${JSON.stringify(result.error)}`);
     }
+    return result.value;
 }
 
 const normalID = joi.string()
@@ -138,6 +139,7 @@ const joinRequest = joi.object({
 
 const joinResponse = joi.object({
     gameID: normalID.required(),
+    owner: normalID.required(),
     players: joi.array()
         .items(player)
         .required()
@@ -173,6 +175,7 @@ const startRoundRequest = joi.object({
 });
 
 const roundResponse = joi.object({
+    id: normalID.required(),
     players: joi.array()
         .items(player)
         .required(),

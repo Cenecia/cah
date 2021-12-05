@@ -100,25 +100,11 @@ class GameService {
     game = await game.save();
     game = await Games.findOne({_id: game_id}).populate('players');
 
-    let latestRound = await Rounds.findOne({game: game_id, status: "submit"})
-                                  .populate({
-                                    path: 'blackCard',
-                                    populate: {
-                                      path: 'set',
-                                      model: 'Sets'
-                                    }
-                                  });
-    if(latestRound) {
-      latestRound = latestRound.toObject();
-    }
+    game = game.toObject();
 
     let returnMe = {
-      whiteCardCount: game.whiteCards.length,
-      blackCardCount: game.blackCards.length,
       gameID: game.id,
       players: game.players,
-      rounds: game.rounds,
-      latestRound: latestRound,
       owner: game.owner
     };
 
@@ -309,7 +295,7 @@ class GameService {
                               model: 'Sets'
                             }
                           });
-    return round;
+    return round.toObject();
   }
   
   //games/selectCandidateCard
