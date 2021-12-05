@@ -37,6 +37,17 @@ const whiteCard = joi.object({
     blankCard: joi.boolean().required()
 });
 
+const blackCard = joi.object({
+    text: joi.string()
+       .min(1)
+       .required(),
+    pick: joi.number()
+        .integer()
+        .min(0)
+        .required(),
+    set: cardSet.required()
+});
+
 const playerHand = joi.array().items(whiteCard).required()
 
 const player = joi.object({
@@ -51,9 +62,40 @@ const player = joi.object({
         .integer()
         .min(0)
         .required(),
-    hand: playerHand
+    hand: joi.array()
+        .items(normalID)
         .required()
 });
+
+const game = joi.object({
+    players: joi.array()
+        .items(normalID)
+        .min(1)
+        .required(),
+    whiteCards: joi.array()
+        .items(normalID)
+        .required(),
+    blackCards: joi.array()
+        .items(normalID)
+        .required(),
+    rounds: joi.array()
+        .items(normalID)
+        .required(),
+    czar: joi.number()
+        .integer()
+        .min(0)
+        .required(),
+    timeLimit: joi.number()
+        .integer()
+        .min(1)
+        .required(),
+    scoreLimit: joi.number()
+        .integer()
+        .min(1)
+        .required(),
+    name: limitedString.required(),
+    owner: normalID.required()
+})
 
 const createRequest = joi.object({
     name:limitedString.required(),
@@ -124,12 +166,33 @@ const handResponse = joi.object({
         .items(whiteCard)
         .min(0)
         .required(),
-})
+});
+
+const startRoundRequest = joi.object({
+    gameID: normalID.required()
+});
+
+const roundResponse = joi.object({
+    players: joi.array()
+        .items(player)
+        .required(),
+    status: limitedString.required(),
+    blackCard: blackCard.required(),
+    game: game.required(),
+    candidateCards: joi.array()
+        .items(whiteCard)
+        .min(0)
+        .required(),
+    czar: normalID.required(),
+    startTime: joi.date().required(),
+    winner: player.optional()
+});
 
 module.exports = {
     check: check,
     incomingMessage: incomingMessage,
     whiteCard: whiteCard,
+    blackCard: blackCard,
     player: player,
     createRequest: createRequest,
     createResponse: createResponse,
@@ -137,5 +200,7 @@ module.exports = {
     joinResponse: joinResponse,
     handRequest: handRequest,
     handResponse: handResponse,
+    startRoundRequest: startRoundRequest,
+    roundResponse: roundResponse,
     cardSet: cardSet
 };

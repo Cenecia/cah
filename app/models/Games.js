@@ -15,14 +15,14 @@ const ObjectId = mongoose.Schema.Types.ObjectId;
 // });
 
 const gameSchema = new mongoose.Schema({
-  players: [{ type: ObjectId, required: true, ref: "Players" }],
-  whiteCards: [{ type: ObjectId, required: true, ref: "WhiteCards" }],
-  blackCards: [{ type: ObjectId, required: true, ref: "BlackCards" }],
-  rounds: [{ type: ObjectId, required: true, ref: "Rounds" }],
+  players: [{ type: ObjectId, required: true, ref: "Players", get: v => v.toString() }],
+  whiteCards: [{ type: ObjectId, required: true, ref: "WhiteCards", get: v => v.toString() }],
+  blackCards: [{ type: ObjectId, required: true, ref: "BlackCards", get: v => v.toString() }],
+  rounds: [{ type: ObjectId, required: true, ref: "Rounds", get: v => v.toString() }],
   czar: Number,
   timeLimit: Number,
   scoreLimit: Number,
-  winner: { type: ObjectId, required: false, ref: "Players" },
+  winner: { type: ObjectId, required: false, ref: "Players", get: function(v){if(v){return v.toString()} return null; }},
   name: String,
   owner: { type: ObjectId, required: true, ref: "Players", get: v => v.toString() }
 });

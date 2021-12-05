@@ -7,7 +7,7 @@ const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const playerSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  hand: [{ type: ObjectId, required: true, ref: "WhiteCards" }],
+  hand: [{ type: ObjectId, required: true, ref: "WhiteCards", get: v => v.toString() }],
   points: { type: Number },
   active: { type: Boolean },
   mulligans: { type: Number },

@@ -133,18 +133,18 @@ class GameService {
    
     let game = await Games.findOne({_id: body.gameID}).populate('players').populate('winner');
     
-    return game.toObject;
+    return game.toObject();
   }
 
   //games/startRound
-  async startRound(body) {
+  async startRound(gameID) {
     const Games = this.mongoose.model('Games');
     const Rounds = this.mongoose.model('Rounds');
     const Players = this.mongoose.model('Players');
     const BlackCards = this.mongoose.model('BlackCards');
     const handSize = 8;
 
-    let game = await Games.findOne({_id: body.gameID}).populate('players');
+    let game = await Games.findOne({_id: gameID}).populate('players');
 
     //Make sure the game has no rounds, or the latest round is 'closed'
     let latestRoundId = game.rounds[game.rounds.length - 1];
@@ -214,7 +214,7 @@ class GameService {
       player = await player.save();
     });
     
-    round = Rounds.findOne({_id: round._id})
+    round = await Rounds.findOne({_id: round._id})
                     .populate('players')
                     .populate('game').populate({
                       path: 'blackCard',
@@ -224,7 +224,7 @@ class GameService {
                       }
                     });
 
-    return round;
+    return round.toObject();
   }
 
   //games/submitWhiteCard
@@ -390,11 +390,11 @@ class GameService {
   }
 
   //games/getLatestRound
-  async getLatestRound (body){
+  async getLatestRound (gameID){
     const Rounds = this.mongoose.model('Rounds');
     const Games = this.mongoose.model('Games');
     const Players = this.mongoose.model('Players');
-    let game = await Games.findOne({_id: body.gameID}).populate('winner');
+    let game = await Games.findOne({_id: gameID}).populate('winner');
 
     let latestRoundId = game.rounds[game.rounds.length - 1];
 
@@ -439,7 +439,7 @@ class GameService {
         round.winner = player._id;
         round.status = 'closed';
         round = await round.save();
-        let nextRound = await this.startRound(body);
+        let nextRound = await this.startRound(gameID);
         return nextRound;
       }
     }

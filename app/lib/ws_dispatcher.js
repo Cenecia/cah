@@ -66,7 +66,7 @@ class WS_Messenger {
                     }
                     this.setPlayerID(msg.playerID);
                     //say round, client will request hand, everything should be peachy
-                    const rejoin_round = await this.gameService.getLatestRound(msg.payload);
+                    const rejoin_round = await this.gameService.getLatestRound(msg.payload.gameID);
                     await this.say("round", rejoin_round);
                     break;
                 case 'createRequest':
@@ -74,15 +74,9 @@ class WS_Messenger {
                     await this.createRequest(msg);
                     break;
                 case 'startRound':
-                    this.log.info(`Start Round message from player ${this.getPlayerID()} and game ${msg.payload.gameID}`);
-                    const start_data = await this.gameService.startRound(msg.payload);
-                    await this.dispatcher.broadcastGameData(start_data.players.map(p => p._id.toString()), "round", start_data);
+                    wsv.check(wsv.startRoundRequest, msg.payload)
+                    await this.startRound(msg);
                     break;
-                // case 'round':
-                //     this.log.info(`Round message for player ${this.get_player_id()} and game ${msg.payload.gameID}`);
-                //     const round_data = await this.game_service.getLatestRound(msg.payload);
-                //     await this.dispatcher.broadcast_game_data(round_data.players.map(p => p._id.toString()), "round", round_data);
-                //     break;
                 case 'handRequest':
                     wsv.check(wsv.handRequest, msg.payload);
                     await this.getHand(msg);
@@ -101,7 +95,7 @@ class WS_Messenger {
                 case 'selectCandidate':
                     this.log.info(`Select candidate message from player ${this.getPlayerID()} and game ${msg.payload.gameID}`);
                     await this.gameService.selectCandidateCard(msg.payload);
-                    const select_data = await this.gameService.getLatestRound(msg.payload);
+                    const select_data = await this.gameService.getLatestRound(msg.payload.gameID);
                     await this.dispatcher.broadcastGameData(select_data.players.map(p => p._id.toString()), "round", select_data);
                     break;
                 case 'kick':
@@ -127,10 +121,17 @@ class WS_Messenger {
         }
     }
 
+    async startRound(msg) {
+        this.log.info(`Start Round message from player ${this.getPlayerID()} and game ${msg.payload.gameID}`);
+        const start_data = await this.gameService.startRound(msg.payload.gameID);
+        wsv.check(wsv.roundResponse, start_data)
+        await this.dispatcher.broadcastGameData(start_data.players.map(p => p._id.toString()), "round", start_data);
+    }
+
     async getHand(msg) {
         this.msg_log(this.getPlayerID(), msg.payload.gameID, "HandRequest");
         const hand_data = await this.gameService.getHand(msg.payload.playerID);
-        wsv.check(wsv.handResponse);
+        wsv.check(wsv.handResponse, hand_data);
         await this.say("handResponse", hand_data);
     }
 
