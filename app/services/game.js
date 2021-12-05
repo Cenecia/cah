@@ -535,39 +535,6 @@ class GameService {
       return false;
     }
 
-    /*
-      //Count white cards we need to distribute
-      let handSize = 8;
-      let newWhiteCardCount = handSize;
-      round.players.forEach(p => {
-        newWhiteCardCount += handSize - p.hand.length;
-      });
-
-      let newWhiteCards = [];
-      let possibleWhiteCards = [];
-
-      //Take the number of white cards we need out of the game's whitecard deck
-      for (var index = 0; index < newWhiteCardCount; index++) {
-        possibleWhiteCards = game.whiteCards.filter(wc => !newWhiteCards.some(nwc => nwc == wc));
-        newWhiteCards.push(possibleWhiteCards[Math.floor(Math.random()*possibleWhiteCards.length)]);
-      }
-
-      //newWhiteCards is now all the cards we will give back to players
-      //possibleWhiteCards is all the remaining whitecards in the deck
-      game.whiteCards = possibleWhiteCards.filter(wc => !newWhiteCards.some(nwc => nwc == wc));
-      game = await game.save();
-
-      //Give each player (handSize) white cards
-      round.players.forEach(async p => {
-        let player = await Players.findOne({_id: p});
-        while(player.hand.length < handSize){
-          let whiteCard = newWhiteCards[Math.floor(Math.random()*newWhiteCards.length)];
-          player.hand.push(whiteCard);
-          newWhiteCards = newWhiteCards.filter(e => e !== whiteCard);
-        }
-        player = await player.save();
-      });
-    */
   }
 
   async kickPlayer(gameID, kickeeID){

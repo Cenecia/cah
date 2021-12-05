@@ -25,6 +25,10 @@ const limitedString = joi.string()
     .min(2)
     .max(30);
 
+const positiveInteger = joi.number()
+    .integer()
+    .min(0);
+
 const incomingMessage = joi.object({
     action: joi.string().required(),
     payload: joi.object().required(),
@@ -50,10 +54,7 @@ const blackCard = joi.object({
     text: joi.string()
        .min(1)
        .required(),
-    pick: joi.number()
-        .integer()
-        .min(0)
-        .required(),
+    pick: positiveInteger.required(),
     set: cardSet.required()
 });
 
@@ -70,21 +71,27 @@ const candidateCards = joi.array().items(
     })
 );
 
+const getAllSetsRequest = joi.object({
+    please: joi.string()
+        .allow("pretty please")
+        .only()
+        .required()
+});
 
-const playerHand = joi.array().items(whiteCard).required()
+const getAllSetsResponse = joi.array()
+    .items(joi.object({
+        id: normalID.required(),
+        name: limitedString.required(),
+        whiteCardCount: positiveInteger.required(),
+        blackCardCount: positiveInteger.required(),
+    }));
 
 const player = joi.object({
     id: normalID.required(),
     name: limitedString.required(),
     active: joi.boolean().required(),
-    points: joi.number()
-        .integer()
-        .min(0)
-        .required(),
-    mulligans: joi.number()
-        .integer()
-        .min(0)
-        .required(),
+    points: positiveInteger.required(),
+    mulligans: positiveInteger.required(),
     hand: joi.array()
         .items(normalID)
         .required()
@@ -104,10 +111,7 @@ const game = joi.object({
     rounds: joi.array()
         .items(normalID)
         .required(),
-    czar: joi.number()
-        .integer()
-        .min(0)
-        .required(),
+    czar: positiveInteger.required(),
     timeLimit: joi.number()
         .integer()
         .min(1)
@@ -118,7 +122,7 @@ const game = joi.object({
         .required(),
     name: limitedString.required(),
     owner: normalID.required()
-})
+});
 
 const createRequest = joi.object({
     name:limitedString.required(),
@@ -138,14 +142,8 @@ const createRequest = joi.object({
 });
 
 const createResponse = joi.object({
-    whiteCardCount: joi.number()
-        .integer()
-        .min(0)
-        .required(),
-    blackCardCount: joi.number()
-        .integer()
-        .min(0)
-        .required(),
+    whiteCardCount: positiveInteger.required(),
+    blackCardCount: positiveInteger.required(),
     gameID: normalID.required(),
     players: joi.array()
         .items(player)
@@ -183,14 +181,8 @@ const handResponse = joi.object({
     name: limitedString.required(),
     active: joi.boolean()
         .required(),
-    points: joi.number()
-        .integer()
-        .min(0)
-        .required(),
-    mulligans: joi.number()
-        .integer()
-        .min(0)
-        .required(),
+    points: positiveInteger.required(),
+    mulligans: positiveInteger.required(),
     hand: joi.array()
         .items(whiteCard)
         .min(0)
@@ -257,6 +249,8 @@ module.exports = {
     whiteCard: whiteCard,
     blackCard: blackCard,
     player: player,
+    getAllSetsRequest: getAllSetsRequest,
+    getAllSetsResponse: getAllSetsResponse,
     createRequest: createRequest,
     createResponse: createResponse,
     joinRequest: joinRequest,

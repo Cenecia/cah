@@ -95,18 +95,6 @@ module.exports.register = (server, serviceLocator) => {
       serviceLocator.get('gameController').getAllCards(req, res, next)
     }
   );
-  
 
-  //getAllSets
-  server.get(
-    {
-      path: '/games/getAllSets',
-      name: 'Get all sets',
-      version: '1.0.0'
-    },
-    (req, res, next) => {
-      serviceLocator.get('gameController').getAllSets(req, res, next)
-    }
-  );
  
 };

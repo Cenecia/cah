@@ -12,6 +12,9 @@ const validator = require('./app/lib/validator');
 const handler = require('./app/lib/error_handler');
 const routes = require('./app/routes/routes');
 const logger = serviceLocator.get('logger');
+//grab the socketService so that it initializes
+const socketService = serviceLocator.get('socketService');
+
 const server = restify.createServer({
   name: config.app.name,
   versions: ['1.0.0'],

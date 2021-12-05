@@ -71,18 +71,7 @@ class GameController {
       res.send(err);
     }
   }
-  
-  async getAllSets(req, res) {
-    try {
-      const result = await this.gameService.getAllSets();
 
-      res.send(result);
-    } catch (err) {
-      this.log.error(err.message);
-      res.send(err);
-    }
-  }
-  
   async updateCard(req, res) {
     try {
       const {body} = req;

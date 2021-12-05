@@ -42,6 +42,10 @@ class WS_Messenger {
             const msg = JSON.parse(incoming);
             wsv.checkAndClean(wsv.incomingMessage, msg);
             switch(msg.action) {
+                case 'getAllSetsRequest':
+                    msg.payload = wsv.checkAndClean(wsv.getAllSetsRequest, msg.payload);
+                    await this.getAllSetsRequest();
+                    break;
                 case 'joinRequest':
                     msg.payload = wsv.checkAndClean(wsv.joinRequest, msg.payload);
                     await this.joinRequest(msg);
@@ -92,6 +96,11 @@ class WS_Messenger {
                 await this.say_error("Error: " + e.toString());
             }
         }
+    }
+
+    async getAllSetsRequest() {
+        const all_sets_data = wsv.checkAndClean(wsv.getAllSetsResponse, await this.gameService.getAllSets());
+        await this.say("getAllSetsResponse", all_sets_data);
     }
 
     async kickRequest(msg) {
