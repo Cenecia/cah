@@ -91,10 +91,8 @@ class WS_Messenger {
                     await this.submitWhite(msg);
                     break;
                 case 'selectCandidate':
-                    this.log.info(`Select candidate message from player ${this.getPlayerID()} and game ${msg.payload.gameID}`);
-                    await this.gameService.selectCandidateCard(msg.payload);
-                    const select_data = await this.gameService.getLatestRound(msg.payload.gameID);
-                    await this.dispatcher.broadcastGameData(select_data.players.map(p => p.id), "round", select_data);
+                    msg.payload = wsv.check(wsv.selectCandidateRequest, msg.payload);
+                    await this.selectCandidate(msg);
                     break;
                 case 'kick':
                     this.log.info(`Kick message from player ${this.getPlayerID()} and game ${msg.payload.gameID}`);
@@ -117,6 +115,13 @@ class WS_Messenger {
                 await this.say_error("Error: " + e.toString());
             }
         }
+    }
+
+    async selectCandidate(msg) {
+        this.log.info(`Select candidate message from player ${this.getPlayerID()} and game ${msg.payload.gameID}`);
+        await this.gameService.selectCandidateCard(msg.payload.gameID, msg.payload.playerID, msg.payload.roundID);
+        const select_data = wsv.check(wsv.roundResponse, await this.gameService.getLatestRound(msg.payload.gameID));
+        await this.dispatcher.broadcastGameData(select_data.players.map(p => p.id), "round", select_data);
     }
 
     async submitWhite(msg) {
@@ -212,7 +217,7 @@ class WS_Messenger {
             return this.socket.send(JSON.stringify({
                 action: "error",
                 playerID: this.getPlayerID(),
-                payload: error.message
+                payload: error
             }));
         }
         else {

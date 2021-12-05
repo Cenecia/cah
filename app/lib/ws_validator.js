@@ -196,6 +196,12 @@ const submitWhiteRequest = joi.object({
         .required()
 });
 
+const selectCandidateRequest = joi.object({
+    gameID: normalID.required(),
+    roundID: normalID.required(),
+    playerID: normalID.required()
+});
+
 const startRoundRequest = joi.object({
     gameID: normalID.required()
 });
@@ -227,6 +233,7 @@ module.exports = {
     handRequest: handRequest,
     handResponse: handResponse,
     submitWhiteRequest: submitWhiteRequest,
+    selectCandidateRequest: selectCandidateRequest,
     startRoundRequest: startRoundRequest,
     roundResponse: roundResponse,
     cardSet: cardSet

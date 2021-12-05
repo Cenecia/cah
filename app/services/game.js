@@ -299,18 +299,18 @@ class GameService {
   }
   
   //games/selectCandidateCard
-  async selectCandidateCard (body){
+  async selectCandidateCard (gameID, playerID, roundID){
     const Rounds = this.mongoose.model('Rounds');
     const Players = this.mongoose.model('Players');
     const Games = this.mongoose.model('Games');
 
-    let round = await Rounds.findOne({_id: body.roundID}).populate('players');
+    let round = await Rounds.findOne({_id: roundID}).populate('players');
     let game = await Games.findOne({_id: round.game });
     if(round.status == 'select'){
       round.players.forEach(async player => {
-        if(player._id == body.player){
+        if(player._id == playerID){
           player.points++;
-          let updatePlayer = await Players.findOne({_id: body.player}).populate('hand');
+          let updatePlayer = await Players.findOne({_id: playerID}).populate('hand');
           updatePlayer.points++;
           updatePlayer = updatePlayer.save();
           if(player.points >= game.scoreLimit){
@@ -321,18 +321,18 @@ class GameService {
         }
       });
       round.candidateCards.forEach(candidate => {
-        if(candidate.player == body.player){
+        if(candidate.player == playerID){
           candidate.winner = true;
         }
       });
-      round.winner = body.player;
+      round.winner = playerID;
       round.status = 'closed';
       round = await round.save();
-      round = await Rounds.findOne({_id: body.roundID}).populate('players').populate('game').populate('winner');
+      //round = await Rounds.findOne({_id: roundID}).populate('players').populate('game').populate('winner');
 
       this.log.info('Winning Card Selected.');
     }
-    return round;
+    //return round;
   }
 
   //games/getHand
@@ -430,7 +430,7 @@ class GameService {
       }
     }
 
-    return round;
+    return round.toObject();
   }
 
   async getAllSets(){
