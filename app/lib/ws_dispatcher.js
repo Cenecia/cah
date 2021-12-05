@@ -74,12 +74,9 @@ class WS_Messenger {
                     msg.payload = wsv.checkAndClean(wsv.selectCandidateRequest, msg.payload);
                     await this.selectCandidate(msg);
                     break;
-                case 'kick':
-                    this.log.info(`Kick message from player ${this.getPlayerID()} and game ${msg.payload.gameID}`);
-                    const kick_data = await this.gameService.kickPlayer(msg.payload);
-                    await this.dispatcher.broadcastGameData(kick_data.players.map(p => p.id), "kick", kick_data);
-                    await this.dispatcher.broadcastGameData([msg.payload.playerID], "kick", kick_data);
-                    await this.dispatcher.kickPlayer(msg.payload.playerID);
+                case 'kickRequest':
+                    msg.payload = wsv.checkAndClean(wsv.kickRequest, msg.payload);
+                    await this.kickRequest(msg);
                     break;
                 case 'refresh':
                     break;
@@ -95,6 +92,15 @@ class WS_Messenger {
                 await this.say_error("Error: " + e.toString());
             }
         }
+    }
+
+    async kickRequest(msg) {
+        //TODO check if this player is the game owner
+        this.msg_log(this.getPlayerID(), msg.payload.gameID, "kickRequest");
+        const kick_data = wsv.checkAndClean(wsv.kickResponse, await this.gameService.kickPlayer(msg.payload.gameID, msg.payload.kickeeID));
+        await this.dispatcher.broadcastGameData(kick_data.players.map(p => p.id), "kickMessage", kick_data);
+        await this.dispatcher.broadcastGameData([msg.payload.kickeeID], "kickMessage", kick_data);
+        await this.dispatcher.kickPlayer(msg.payload.kickeeID);
     }
 
     async rejoinRequest(msg) {

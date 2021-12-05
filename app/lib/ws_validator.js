@@ -238,6 +238,19 @@ const roundResponse = joi.object({
     winner: player.optional()
 });
 
+const kickRequest = joi.object({
+    gameID: normalID.required(),
+    kickeeID: normalID.required()
+});
+
+const kickResponse = joi.object({
+    gameID: normalID.required(),
+    kickeeID: normalID.required(),
+    players: joi.array()
+        .items(player)
+        .required()
+});
+
 module.exports = {
     checkAndClean: checkAndClean,
     incomingMessage: incomingMessage,
@@ -256,5 +269,7 @@ module.exports = {
     startRoundRequest: startRoundRequest,
     mulliganRequest: mulliganRequest,
     roundResponse: roundResponse,
+    kickRequest: kickRequest,
+    kickResponse: kickResponse,
     cardSet: cardSet
 };

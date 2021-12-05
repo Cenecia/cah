@@ -570,19 +570,31 @@ class GameService {
     */
   }
 
-  async removePlayer(body){
+  async kickPlayer(gameID, kickeeID){
     const Games = this.mongoose.model('Games');
     const Rounds = this.mongoose.model('Rounds');
-    let game = await Games.findOne({_id: body.gameID});
-    game.players = game.players.filter(p => p != body.playerID);
+    let game = await Games.findOne({_id: gameID}).populate('players');
+    game.players = game.players.filter(p => p._id != kickeeID);
     game = await game.save();
 
     if(game.rounds.length > 0){
       let latestRoundId = game.rounds[game.rounds.length - 1];
       let round = await Rounds.findOne({ _id: latestRoundId });
-      round.players = round.players.filter(p => p != body.playerID);
+      round.players = round.players.filter(p => p != kickeeID);
       round = await round.save();
     }
+
+    game = game.toObject();
+
+    let returnMe = {
+      gameID: game.id,
+      players: game.players,
+      kickeeID: kickeeID
+    };
+
+    this.log.info('Kicked player ' + kickeeID);
+
+    return returnMe;
   }
 
   async parseGame() {
@@ -742,40 +754,7 @@ class GameService {
     return "Did not update anything.";
   }
 
-  async kickPlayer(body) {
-    const Games = this.mongoose.model('Games');
-    const Players = this.mongoose.model('Players');
-    const Rounds = this.mongoose.model('Rounds');
 
-    let game = await Games.findOne({_id: body.gameID});
-
-    game.players = game.players.filter(p => p._id != body.playerID);
-    await game.save();
-    game = await Games.findOne({_id: body.gameID}).populate('players');
-
-    let latestRound = await Rounds.findOne({game: body.gameID, status: "submit"})
-        .populate({
-          path: 'blackCard',
-          populate: {
-            path: 'set',
-            model: 'Sets'
-          }
-        });
-
-    let returnMe = {
-      whiteCardCount: game.whiteCards.length,
-      blackCardCount: game.blackCards.length,
-      gameID: game._id,
-      players: game.players,
-      rounds: game.rounds,
-      latestRound: latestRound,
-      owner: game.owner
-    };
-
-    this.log.info('Kicked player ' + body.playerID);
-
-    return returnMe;
-  }
 }
 
 module.exports = GameService;
