@@ -27,7 +27,6 @@ class WS_Messenger {
         this.gameService = game_service;
         this.playerID = null;
 
-
         const myself = this;
         this._messageHandler = function(incoming) {
             return myself.messageHandler(incoming);
@@ -82,9 +81,8 @@ class WS_Messenger {
                     await this.getHand(msg);
                     break;
                 case 'mulligan':
-                    this.log.info(`Hand message from player ${this.getPlayerID()}`);
-                    const mulligan_data = await this.gameService.mulligan(msg.payload);
-                    await this.say("hand", mulligan_data);
+                    msg.payload = wsv.checkAndClean(wsv.mulliganRequest, msg.payload);
+                    await this.mulligan(msg);
                     break;
                 case 'submitWhite':
                     msg.payload = wsv.checkAndClean(wsv.submitWhiteRequest, msg.payload);
@@ -114,6 +112,17 @@ class WS_Messenger {
             else {
                 await this.say_error("Error: " + e.toString());
             }
+        }
+    }
+
+    async mulligan(msg) {
+        this.log.info(`Hand message from player ${this.getPlayerID()}`);
+        if(await this.gameService.mulligan(msg.payload.playerID, msg.payload.gameID)) {
+            const hand_data = wsv.checkAndClean(wsv.handResponse, await this.gameService.getHand(msg.payload.playerID));
+            await this.say("handResponse", hand_data);
+        }
+        else {
+            await this.say("info", "No mulligans left!");
         }
     }
 

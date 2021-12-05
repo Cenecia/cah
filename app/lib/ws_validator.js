@@ -214,6 +214,11 @@ const startRoundRequest = joi.object({
     gameID: normalID.required()
 });
 
+const mulliganRequest = joi.object({
+    gameID: normalID.required(),
+    playerID: normalID.required()
+})
+
 const roundResponse = joi.object({
     id: normalID.required(),
     players: joi.array()
@@ -243,6 +248,7 @@ module.exports = {
     submitWhiteRequest: submitWhiteRequest,
     selectCandidateRequest: selectCandidateRequest,
     startRoundRequest: startRoundRequest,
+    mulliganRequest: mulliganRequest,
     roundResponse: roundResponse,
     cardSet: cardSet
 };

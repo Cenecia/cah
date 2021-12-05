@@ -498,14 +498,20 @@ class GameService {
     }
   }
 
-  async mulligan(body) {
+  /**
+   *
+   * @param playerID
+   * @param gameID
+   * @returns True if a mulligan was executed; False if not.
+   */
+  async mulligan(playerID, gameID) {
 
     const Players = this.mongoose.model('Players');
 
-    let player = await Players.findOne({_id: body.playerID});
+    let player = await Players.findOne({_id: playerID});
     if(player.mulligans > 0){
       const Games = this.mongoose.model('Games');
-      let game = await Games.findOne({_id: body.gameID});
+      let game = await Games.findOne({_id: gameID});
       const handSize = 8;
 
       let newWhiteCards = [];
@@ -523,17 +529,10 @@ class GameService {
       game.whiteCards = possibleWhiteCards.filter(wc => !newWhiteCards.some(nwc => nwc == wc));
       game = await game.save();
 
-      player = await Players.findOne({_id: body.playerID}).populate('hand').populate({
-        path: 'hand',
-        populate: {
-          path: 'set',
-          model: 'Sets'
-        }});
-
-      return player;
+      return true;
     } else {
       this.log.info('No mulligans left');
-      return 'No mulligans left';
+      return false;
     }
 
     /*
