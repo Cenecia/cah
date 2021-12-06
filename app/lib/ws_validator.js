@@ -13,7 +13,7 @@ const OBJECTID_LENGTH = 24; //twelve hexadecimal bytes
 function checkAndClean (schema, data) {
     let result = schema.validate(data,{allowUnknown: true, convert: true, stripUnknown: true} )
     if(result.error !== null) {
-        throw new Error(`Validation Failure: ${result.error.message || "???"}. Raw: ${JSON.stringify(result.error)}`);
+        throw new Error(`Validation Failure: ${result.error.message || "???"}.`);
     }
     return result.value;
 }
