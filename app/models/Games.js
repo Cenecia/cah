@@ -22,7 +22,7 @@ const gameSchema = new mongoose.Schema({
   czar: Number,
   timeLimit: Number,
   scoreLimit: Number,
-  winner: { type: ObjectId, required: false, ref: "Players", get: function(v){if(v){return v.toString()} return null; }},
+  winner: { type: ObjectId, required: false, ref: "Players"},
   name: String,
   owner: { type: ObjectId, required: true, ref: "Players", get: v => v.toString() }
 });

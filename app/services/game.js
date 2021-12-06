@@ -47,7 +47,8 @@ class GameService {
       timeLimit: timeLimit,
       scoreLimit: scoreLimit,
       name: gameName,
-      owner: playerOne._id
+      owner: playerOne._id,
+      winner: null
     });
 
     blackCardDeck.forEach(b => {
@@ -263,8 +264,8 @@ class GameService {
     let player = await Players.findOne({_id: playerID});
 
     //remove the submitted white cards from the player's hand
-    whiteCards.forEach(async whiteCard => {
-      player.hand = player.hand.filter(o => o._id != whiteCard.cardID);
+    whiteCards.forEach(whiteCard => {
+      player.hand = player.hand.filter(o => o.toString() !== whiteCard.cardID);
     });
 
     //If they were inactive, they are active now
@@ -312,11 +313,11 @@ class GameService {
           player.points++;
           let updatePlayer = await Players.findOne({_id: playerID}).populate('hand');
           updatePlayer.points++;
-          updatePlayer = updatePlayer.save();
+          updatePlayer = await updatePlayer.save();
           if(player.points >= game.scoreLimit){
-            this.log.info("Game over - Winner "+player.name);
             game.winner = player._id;
             game = await game.save();
+            this.log.info("Game over - Winner "+player.name);
           }
         }
       });
@@ -380,7 +381,7 @@ class GameService {
     const Rounds = this.mongoose.model('Rounds');
     const Games = this.mongoose.model('Games');
     const Players = this.mongoose.model('Players');
-    let game = await Games.findOne({_id: gameID}).populate('winner');
+    let game = await Games.findOne({_id: gameID});
 
     let latestRoundId = game.rounds[game.rounds.length - 1];
 
@@ -389,46 +390,52 @@ class GameService {
                               .populate('players')
                               .populate('winner')
                               .populate({
+                                path: 'game',
+                                populate: {
+                                  path: "winner",
+                                  model: "Players"
+                                }
+                              })
+                              .populate({
                                 path: 'blackCard',
                                 populate: {
                                   path: 'set',
                                   model: 'Sets'
                                 }
                               });
-    round.game = game;
 
     //Check if round timed out
-    let now = new Date();
-    let diff = now - round.startTime;
-
-    if(diff > game.timeLimit){
-      if(round.status == "submit"){
-        let inactives = [];
-        this.log.info('Time limit hit. Next phase');
-
-        round.players.filter(p => p._id.toString() != round.czar.toString()).forEach(async p => {
-          let player = await Players.findOne({ _id: p._id });
-          player.active = round.candidateCards.some(c => c.player.toString() == p._id.toString());
-          player = await player.save();
-        });
-        round.status = 'select';
-        round = await round.save();
-      } else if(round.status == "select"){
-        let player = await Players.findOne({ _id: round.candidateCards[0].player });
-        player.points++;
-        player = player.save();
-        if(player.points >= game.scoreLimit){
-          this.log.info("Game over - Winner "+player.name);
-          game.winner = player._id;
-          game = await game.save();
-        }
-        round.winner = player._id;
-        round.status = 'closed';
-        round = await round.save();
-        let nextRound = await this.startRound(gameID);
-        return nextRound;
-      }
-    }
+    // let now = new Date();
+    // let diff = now - round.startTime;
+    //
+    // if(diff > game.timeLimit){
+    //   if(round.status == "submit"){
+    //     let inactives = [];
+    //     this.log.info('Time limit hit. Next phase');
+    //
+    //     round.players.filter(p => p._id.toString() != round.czar.toString()).forEach(async p => {
+    //       let player = await Players.findOne({ _id: p._id });
+    //       player.active = round.candidateCards.some(c => c.player.toString() == p._id.toString());
+    //       player = await player.save();
+    //     });
+    //     round.status = 'select';
+    //     round = await round.save();
+    //   } else if(round.status == "select"){
+    //     let player = await Players.findOne({ _id: round.candidateCards[0].player });
+    //     player.points++;
+    //     player = player.save();
+    //     if(player.points >= game.scoreLimit){
+    //       this.log.info("Game over - Winner "+player.name);
+    //       game.winner = player._id;
+    //       game = await game.save();
+    //     }
+    //     round.winner = player._id;
+    //     round.status = 'closed';
+    //     round = await round.save();
+    //     let nextRound = await this.startRound(gameID);
+    //     return nextRound;
+    //   }
+    // }
 
     return round.toObject();
   }

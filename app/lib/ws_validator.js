@@ -130,7 +130,8 @@ const game = joi.object({
         .min(1)
         .required(),
     name: limitedString.required(),
-    owner: normalID.required()
+    owner: normalID.required(),
+    winner: player.allow(null).required()
 });
 
 const createRequest = joi.object({
