@@ -3,6 +3,14 @@
 const wsv = require("./ws_validator");
 const ws = require('ws');
 
+//use semantic versioning for our api version
+const apiversion = {
+    major: 0,
+    minor: 0,
+    patch: 0,
+    prerelease: null,
+    build: null
+};
 
 class WS_Messenger {
     /**
@@ -41,6 +49,7 @@ class WS_Messenger {
         try {
             const msg = JSON.parse(incoming);
             wsv.checkAndClean(wsv.incomingMessage, msg);
+            this.checkApiVersion(msg.apiversion);
             switch(msg.action) {
                 case 'getAllSetsRequest':
                     msg.payload = wsv.checkAndClean(wsv.getAllSetsRequest, msg.payload);
@@ -94,11 +103,31 @@ class WS_Messenger {
         }
         catch(e) {
             if(e.hasOwnProperty("message")) {
-                await this.say_error("Exception: " + e.message);
+                await this.say_error(e.message);
             }
             else {
                 await this.say_error("Error: " + e.toString());
             }
+        }
+    }
+
+    /**
+     * Check the provided version object against the current version.
+     * Raises exception if message version is incompatible according to semver rules.
+     * See https://semver.org
+     * @param msg_ver
+     */
+    checkApiVersion(msg_ver) {
+        const clientVerString = `${msg_ver.major}.${msg_ver.minor}.${msg_ver.patch}`;
+        const serverVerString = `${apiversion.major}.${apiversion.minor}.${apiversion.patch}`;
+        if(msg_ver.major !== apiversion.major) {
+            throw new Error(`API major version mismatch. Client: ${clientVerString}, Server: ${serverVerString}`);
+        }
+        if(msg_ver.minor > apiversion.minor) {
+            throw new Error(`Client API minor version too new. Client: ${clientVerString}, Server: ${serverVerString}`);
+        }
+        if(msg_ver.patch > apiversion.patch) {
+            throw new Error(`Client API patchlevel too new. Client: ${clientVerString}, Server: ${serverVerString}`);
         }
     }
 
@@ -234,6 +263,7 @@ class WS_Messenger {
     async say(action, payload) {
         if(!this.isClosed()) {
             return this.socket.send(JSON.stringify({
+                apiversion: apiversion,
                 action: action,
                 playerID: this.getPlayerID(),
                 payload: payload
@@ -251,6 +281,7 @@ class WS_Messenger {
         this.log.error(error);
         if(!this.isClosed()) {
             return this.socket.send(JSON.stringify({
+                apiversion: apiversion,
                 action: "error",
                 playerID: this.getPlayerID(),
                 payload: error
@@ -353,4 +384,7 @@ class WS_Dispatcher {
 }
 
 
-module.exports = WS_Dispatcher;
+module.exports = {
+    WS_Dispatcher: WS_Dispatcher,
+    WS_apiversion: apiversion
+};

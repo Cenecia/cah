@@ -29,7 +29,15 @@ const positiveInteger = joi.number()
     .integer()
     .min(0);
 
+const apiVersion = joi.object({
+        major: positiveInteger.required(),
+        minor: positiveInteger.required(),
+        patch: positiveInteger.required(),
+        prerelease: limitedString.allow(null).optional(),
+        build: limitedString.allow(null).optional()
+})
 const incomingMessage = joi.object({
+    apiversion: apiVersion.required(),
     action: joi.string().required(),
     payload: joi.object().required(),
     playerID: normalID.allow('').allow(null).optional()

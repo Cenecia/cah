@@ -31,10 +31,10 @@ serviceLocator.register('gameService', (serviceLocator) => {
 
 serviceLocator.register('socketService', (serviceLocator) => {
     const log = serviceLocator.get('logger');
-    const SocketService = require('../lib/ws_dispatcher');
+    const wsd = require('../lib/ws_dispatcher');
     const gameService = serviceLocator.get('gameService');
 
-    return new SocketService(log, gameService, config.websockets.port);
+    return new wsd.WS_Dispatcher(log, gameService, config.websockets.port);
 });
 
 serviceLocator.register('gameController', (serviceLocator) => {
