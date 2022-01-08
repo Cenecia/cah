@@ -4,114 +4,7 @@
 
 module.exports.register = (server, serviceLocator) => {
 
-  server.post(
-    {
-      path: '/games/new',
-      name: 'Create Game',
-      version: '1.0.0',
-      validation: {
-        body: require('../validations/create_game')
-      }
-    },
-    (req, res, next) => {
-      serviceLocator.get('gameController').create(req, res, next)
-    }
-  );
 
-  server.post(
-    {
-      path: '/games/join',
-      name: 'Join Game',
-      version: '1.0.0',
-      validation: {
-        body: require('../validations/create_game')
-      }
-    },
-    (req, res, next) => {
-      serviceLocator.get('gameController').join(req, res, next)
-    }
-  );
-
-  server.post(
-    {
-      path: '/games/getGame',
-      name: 'Get Game',
-      version: '1.0.0'
-    },
-    (req, res, next) => {
-      serviceLocator.get('gameController').getGame(req, res, next)
-    }
-  );
-
-  server.post(
-    {
-      path: '/games/startRound',
-      name: 'Start New Round',
-      version: '1.0.0'
-    },
-    (req, res, next) => {
-      serviceLocator.get('gameController').startRound(req, res, next)
-    }
-  );
-
-  server.post(
-    {
-      path: '/games/submitWhiteCard',
-      name: 'Submit White Card',
-      version: '1.0.0'
-    },
-    (req, res, next) => {
-      serviceLocator.get('gameController').submitWhiteCard(req, res, next)
-    }
-  );
-
-  //getHand
-  server.post(
-    {
-      path: '/games/getHand',
-      name: 'Get Player Hand',
-      version: '1.0.0'
-    },
-    (req, res, next) => {
-      serviceLocator.get('gameController').getHand(req, res, next)
-    }
-  );
-
-  //getRound
-  server.post(
-    {
-      path: '/games/getRound',
-      name: 'Get a round in session',
-      version: '1.0.0'
-    },
-    (req, res, next) => {
-      serviceLocator.get('gameController').getRound(req, res, next)
-    }
-  );
-
-  //getLatestRound
-  server.post(
-    {
-      path: '/games/getLatestRound',
-      name: 'Get latest round in a game',
-      version: '1.0.0'
-    },
-    (req, res, next) => {
-      serviceLocator.get('gameController').getLatestRound(req, res, next)
-    }
-  );
-
-  server.post(
-    {
-      path: '/games/selectCandidateCard',
-      name: 'Submit White Card',
-      version: '1.0.0'
-    },
-    (req, res, next) => {
-      serviceLocator.get('gameController').selectCandidateCard(req, res, next)
-    }
-  );
-  
   server.post(
     {
       path: '/games/updateCard',
@@ -178,28 +71,6 @@ module.exports.register = (server, serviceLocator) => {
       serviceLocator.get('gameController').getAllCards(req, res, next)
     }
   );
-  
-  server.post(
-    {
-      path: '/games/mulligan',
-      name: 'Add Card',
-      version: '1.0.0'
-    },
-    (req, res, next) => {
-      serviceLocator.get('gameController').mulligan(req, res, next)
-    }
-  );
-  
-  //getAllSets
-  server.get(
-    {
-      path: '/games/getAllSets',
-      name: 'Get all sets',
-      version: '1.0.0'
-    },
-    (req, res, next) => {
-      serviceLocator.get('gameController').getAllSets(req, res, next)
-    }
-  );
+
  
 };

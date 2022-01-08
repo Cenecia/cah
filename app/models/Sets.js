@@ -9,4 +9,6 @@ const setSchema = new mongoose.Schema({
   set_id: { type: String, required: true }
 });
 
+setSchema.set('toObject', { getters: true });
+
 module.exports = mongoose.model('Sets', setSchema);

@@ -11,4 +11,6 @@ const whiteCardSchema = new mongoose.Schema({
   blankCard: { type: Boolean, default: false }
 });
 
+whiteCardSchema.set('toObject', { getters: true });
+
 module.exports = mongoose.model('WhiteCards', whiteCardSchema);
