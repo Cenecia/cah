@@ -12,6 +12,9 @@ const apiversion = {
     build: null
 };
 
+const PING_INTERVAL_MS = 15000;
+
+
 class WS_Messenger {
     /**
      * Constructs a messenger object.
@@ -96,6 +99,10 @@ class WS_Messenger {
                     await this.kickRequest(msg);
                     break;
                 case 'refresh':
+                    break;
+                case 'ping':
+                    msg.payload = wsv.checkAndClean(wsv.ping, msg.payload);
+                    await this.pong(msg);
                     break;
                 default:
                     await this.say_error(`Unhandled event: ${msg.action}`);
@@ -218,6 +225,11 @@ class WS_Messenger {
         await this.dispatcher.broadcastGameData(join_data.players.map(p => p.id), "update", join_data);
     }
 
+    async pong(msg) {
+        const pong = wsv.checkAndClean(wsv.pong, {pong: "pong!"});
+        await this.say("pong", pong);
+    }
+
     /**
      * Convenience function to make a log entry.
      * @param player_id
@@ -254,7 +266,6 @@ class WS_Messenger {
     isClosed() {
         return this.socket === null;
     }
-
     /**
      * Transmits a message to the player associated with this messenger.
      * @param action
@@ -264,6 +275,7 @@ class WS_Messenger {
         if(!this.isClosed()) {
             return this.socket.send(JSON.stringify({
                 apiversion: apiversion,
+                pingT: PING_INTERVAL_MS,
                 action: action,
                 playerID: this.getPlayerID(),
                 payload: payload

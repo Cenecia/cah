@@ -265,6 +265,20 @@ const kickResponse = joi.object({
         .required()
 });
 
+const ping = joi.object({
+    ping: joi.string()
+        .allow("ping?")
+        .only()
+        .required()
+});
+
+const pong = joi.object({
+    pong: joi.string()
+        .allow("pong!")
+        .only()
+        .required()
+});
+
 module.exports = {
     checkAndClean: checkAndClean,
     incomingMessage: incomingMessage,
@@ -289,5 +303,7 @@ module.exports = {
     roundResponse: roundResponse,
     kickRequest: kickRequest,
     kickResponse: kickResponse,
-    cardSet: cardSet
+    cardSet: cardSet,
+    ping: ping,
+    pong: pong
 };
