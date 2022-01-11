@@ -2,6 +2,7 @@
 
 const wsv = require("./ws_validator");
 const ws = require('ws');
+const https = require('https');
 
 //use semantic versioning for our api version
 const apiversion = {
@@ -320,16 +321,33 @@ class WS_Dispatcher {
      * @param log
      * @param game_service
      * @param port
+     * @param cert pem data from a cert file
+     * @param key key data from a cert file
      * @constructor
      */
-    constructor(log, game_service, port) {
+    constructor(log, game_service, port, cert=null, key=null) {
         this.log = log;
         this.log.info("WSD init");
         this.gameService = game_service;
         this.port = port;
         this.messengers = [];
 
-        this.server = new ws.Server({port:this.port});
+        let use_ssl = false;
+        if(cert != null && key != null) {
+            use_ssl = true;
+        }
+
+        if(!use_ssl) {
+            this.server = new ws.WebSocketServer({port:this.port});
+        }
+        else {
+            const https_server = https.createServer({
+                cert: cert,
+                key: key
+            });
+            this.server = new ws.WebSocketServer({server: https_server});
+            https_server.listen({port: this.port});
+        }
         const myself = this;
         this._connectionHandler = function(socket) {
             myself.connectionHandler(socket);
