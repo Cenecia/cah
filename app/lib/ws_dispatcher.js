@@ -327,7 +327,7 @@ class WS_Dispatcher {
      */
     constructor(log, game_service, port, cert=null, key=null) {
         this.log = log;
-        this.log.info("WSD init");
+        this.log.info(`WSD init, listening on port ${port}`);
         this.gameService = game_service;
         this.port = port;
         this.messengers = [];
@@ -335,6 +335,7 @@ class WS_Dispatcher {
         let use_ssl = false;
         if(cert != null && key != null) {
             use_ssl = true;
+            this.log.info(`WSD SSL enabled`);
         }
 
         if(!use_ssl) {

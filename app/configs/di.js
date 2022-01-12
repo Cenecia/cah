@@ -36,7 +36,7 @@ serviceLocator.register('socketService', (serviceLocator) => {
     const wsd = require('../lib/ws_dispatcher');
     const gameService = serviceLocator.get('gameService');
 
-    if(config.websockets.key_file != null && config.websockets.cert_file != null) {
+    if(config.websockets.ssl_enabled) {
         const cert = fs.readFileSync(config.websockets.cert_file);
         const key = fs.readFileSync(config.websockets.key_file);
         return new wsd.WS_Dispatcher(log, gameService, config.websockets.port, cert, key);
