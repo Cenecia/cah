@@ -2,6 +2,8 @@
 
 const serviceLocator = require('../lib/service_locator');
 const config = require('./configs')();
+const fs = require('fs');
+const wsd = require("../lib/ws_dispatcher");
 
 serviceLocator.register('logger', () => {
   return require('../lib/logger').create(config.application_logging);
@@ -34,7 +36,14 @@ serviceLocator.register('socketService', (serviceLocator) => {
     const wsd = require('../lib/ws_dispatcher');
     const gameService = serviceLocator.get('gameService');
 
-    return new wsd.WS_Dispatcher(log, gameService, config.websockets.port);
+    if(config.websockets.ssl_enabled) {
+        const cert = fs.readFileSync(config.websockets.cert_file);
+        const key = fs.readFileSync(config.websockets.key_file);
+        return new wsd.WS_Dispatcher(log, gameService, config.websockets.port, cert, key);
+    }
+    else {
+        return new wsd.WS_Dispatcher(log, gameService, config.websockets.port);
+    }
 });
 
 serviceLocator.register('gameController', (serviceLocator) => {

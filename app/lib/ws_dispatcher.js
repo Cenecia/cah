@@ -2,6 +2,7 @@
 
 const wsv = require("./ws_validator");
 const ws = require('ws');
+const https = require('https');
 
 //use semantic versioning for our api version
 const apiversion = {
@@ -11,6 +12,9 @@ const apiversion = {
     prerelease: null,
     build: null
 };
+
+const PING_INTERVAL_MS = 15000;
+
 
 class WS_Messenger {
     /**
@@ -96,6 +100,10 @@ class WS_Messenger {
                     await this.kickRequest(msg);
                     break;
                 case 'refresh':
+                    break;
+                case 'ping':
+                    msg.payload = wsv.checkAndClean(wsv.ping, msg.payload);
+                    await this.pong(msg);
                     break;
                 default:
                     await this.say_error(`Unhandled event: ${msg.action}`);
@@ -218,6 +226,11 @@ class WS_Messenger {
         await this.dispatcher.broadcastGameData(join_data.players.map(p => p.id), "update", join_data);
     }
 
+    async pong(msg) {
+        const pong = wsv.checkAndClean(wsv.pong, {pong: "pong!"});
+        await this.say("pong", pong);
+    }
+
     /**
      * Convenience function to make a log entry.
      * @param player_id
@@ -254,7 +267,6 @@ class WS_Messenger {
     isClosed() {
         return this.socket === null;
     }
-
     /**
      * Transmits a message to the player associated with this messenger.
      * @param action
@@ -264,6 +276,7 @@ class WS_Messenger {
         if(!this.isClosed()) {
             return this.socket.send(JSON.stringify({
                 apiversion: apiversion,
+                pingT: PING_INTERVAL_MS,
                 action: action,
                 playerID: this.getPlayerID(),
                 payload: payload
@@ -308,16 +321,34 @@ class WS_Dispatcher {
      * @param log
      * @param game_service
      * @param port
+     * @param cert pem data from a cert file
+     * @param key key data from a cert file
      * @constructor
      */
-    constructor(log, game_service, port) {
+    constructor(log, game_service, port, cert=null, key=null) {
         this.log = log;
-        this.log.info("WSD init");
+        this.log.info(`WSD init, listening on port ${port}`);
         this.gameService = game_service;
         this.port = port;
         this.messengers = [];
 
-        this.server = new ws.Server({port:this.port});
+        let use_ssl = false;
+        if(cert != null && key != null) {
+            use_ssl = true;
+            this.log.info(`WSD SSL enabled`);
+        }
+
+        if(!use_ssl) {
+            this.server = new ws.WebSocketServer({port:this.port});
+        }
+        else {
+            const https_server = https.createServer({
+                cert: cert,
+                key: key
+            });
+            this.server = new ws.WebSocketServer({server: https_server});
+            https_server.listen({port: this.port});
+        }
         const myself = this;
         this._connectionHandler = function(socket) {
             myself.connectionHandler(socket);

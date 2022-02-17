@@ -13,7 +13,10 @@ module.exports = () => ({
     name: process.env.DB_NAME
   },
   websockets: {
-    port: process.env.WS_PORT
+    port: process.env.WS_PORT,
+    ssl_enabled: process.env.SSL_ENABLED,
+    cert_file: process.env.SSL_CERT_FILE,
+    key_file: process.env.SSL_KEY_FILE
   },
   application_logging: {
     file: process.env.LOG_PATH,
