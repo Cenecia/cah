@@ -350,3 +350,8 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+
+#mongo backup JSON files
+sets.json
+whitecards.json
+blackcards.json
