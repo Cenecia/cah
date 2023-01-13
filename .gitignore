@@ -355,3 +355,6 @@ MigrationBackup/
 sets.json
 whitecards.json
 blackcards.json
+
+#docker mongo db
+/data/
