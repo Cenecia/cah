@@ -32,12 +32,15 @@ class GameService {
       }
     });
 
+    let guid = uuidv4();
+
     let playerOne = new Players({
       name: body.player,
       hand: [],
       points: 0,
       active: true,
-      mulligans: 1
+      mulligans: 1,
+      guid: guid
     });
     playerOne = await playerOne.save();
     
@@ -61,13 +64,20 @@ class GameService {
     });
 
     newGame = await newGame.save();
-    newGame = await Games.findOne({_id: newGame._id}).populate('players');
+    //newGame = await Games.findOne({_id: newGame._id}).populate('players');
+    newGame = 
+      await Games.findOne({_id: newGame._id})
+      .populate({ path: 'players', select: 'name' })
+      .populate({ path: 'players', select: 'points' })
+      .populate({ path: 'players', select: 'active' });
 
     let returnMe = {
       whiteCardCount: newGame.whiteCards.length,
       blackCardCount: newGame.blackCards.length,
       gameID: newGame._id,
-      players: newGame.players
+      players: newGame.players,
+      playerID: newGame.players[0]._id,
+      guid: guid
     };
 
     this.log.info('New game created.');
