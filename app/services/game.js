@@ -64,8 +64,7 @@ class GameService {
       whiteCardCount: newGame.whiteCards.length,
       blackCardCount: newGame.blackCards.length,
       gameID: newGame._id,
-      players: newGame.players,
-      owner: newGame.owner
+      players: newGame.players
     };
 
     this.log.info('New game created.');
@@ -108,9 +107,10 @@ class GameService {
       gameID: game._id,
       players: game.players,
       rounds: game.rounds,
-      latestRound: latestRound,
-      owner: game.owner
+      latestRound: latestRound
     };
+
+    this.log.info(newPlayer.name+' joined game.');
 
     return returnMe;
   }
@@ -248,6 +248,7 @@ class GameService {
       }
     }
 
+    //Add the candidate cards to the round, tied to the player
     round.candidateCards.push({
       player: body.playerID,
       cards: candidateCards
@@ -340,7 +341,6 @@ class GameService {
        path: 'set',
        model: 'Sets'
      }});
-    let player = await Players.findOne({_id: body.playerID}).populate('hand');    
 
     return player;
   }
@@ -558,21 +558,6 @@ class GameService {
         player = await player.save();
       });
     */
-  }
-
-  async removePlayer(body){
-    const Games = this.mongoose.model('Games');
-    const Rounds = this.mongoose.model('Rounds');
-    let game = await Games.findOne({_id: body.gameID});
-    game.players = game.players.filter(p => p != body.playerID);
-    game = await game.save();
-
-    if(game.rounds.length > 0){
-      let latestRoundId = game.rounds[game.rounds.length - 1];
-      let round = await Rounds.findOne({ _id: latestRoundId });
-      round.players = round.players.filter(p => p != body.playerID);
-      round = await round.save();
-    }
   }
 
   async parseGame() {

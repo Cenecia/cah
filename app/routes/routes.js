@@ -146,17 +146,6 @@ module.exports.register = (server, serviceLocator) => {
     }
   );
 
-  server.post(
-    {
-      path: '/games/removePlayer',
-      name: 'Remove Player',
-      version: '1.0.0'
-    },
-    (req, res, next) => {
-      serviceLocator.get('gameController').removePlayer(req, res, next)
-    }
-  );
-
   server.get(
     {
       path: '/games/parse',
