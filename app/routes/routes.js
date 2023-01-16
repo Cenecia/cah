@@ -111,6 +111,40 @@ module.exports.register = (server, serviceLocator) => {
       serviceLocator.get('gameController').selectCandidateCard(req, res, next)
     }
   );
+  
+  server.post(
+    {
+      path: '/games/updateCard',
+      name: 'Update Card',
+      version: '1.0.0'
+    },
+    (req, res, next) => {
+      serviceLocator.get('gameController').updateCard(req, res, next)
+    }
+  );
+  
+  server.post(
+    {
+      path: '/games/addCard',
+      name: 'Add Card',
+      version: '1.0.0'
+    },
+    (req, res, next) => {
+      serviceLocator.get('gameController').addCard(req, res, next)
+    }
+  );
+  
+  server.get(
+    {
+      path: '/test/test',
+      name: 'Parse Sets from API',
+      version: '1.0.0'
+    },
+    (req, res, next) => {
+      //serviceLocator.get('gameController').parse(req, res, next);
+      return "Test!";
+    }
+  );
 
   server.post(
     {
@@ -142,6 +176,40 @@ module.exports.register = (server, serviceLocator) => {
     },
     (req, res, next) => {
       serviceLocator.get('gameController').parseCards(req, res, next)
+    }
+  );
+  
+  server.get(
+    {
+      path: '/games/getAllCards',
+      name: 'Get all cards',
+      version: '1.0.0'
+    },
+    (req, res, next) => {
+      serviceLocator.get('gameController').getAllCards(req, res, next)
+    }
+  );
+  
+  server.post(
+    {
+      path: '/games/mulligan',
+      name: 'Add Card',
+      version: '1.0.0'
+    },
+    (req, res, next) => {
+      serviceLocator.get('gameController').mulligan(req, res, next)
+    }
+  );
+  
+  //getAllSets
+  server.get(
+    {
+      path: '/games/getAllSets',
+      name: 'Get all sets',
+      version: '1.0.0'
+    },
+    (req, res, next) => {
+      serviceLocator.get('gameController').getAllSets(req, res, next)
     }
   );
  

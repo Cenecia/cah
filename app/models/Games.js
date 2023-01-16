@@ -20,7 +20,10 @@ const gameSchema = new mongoose.Schema({
   blackCards: [{ type: ObjectId, required: true, ref: "BlackCards" }],
   rounds: [{ type: ObjectId, required: true, ref: "Rounds" }],
   czar: Number,
-  owner: { type: ObjectId, required: true, ref: "Players" }
+  timeLimit: Number,
+  scoreLimit: Number,
+  winner: { type: ObjectId, required: false, ref: "Players" },
+  name: String
 });
 
 module.exports = mongoose.model('Games', gameSchema);
