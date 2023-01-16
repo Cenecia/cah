@@ -120,7 +120,7 @@ class GameController {
       res.send(err);
     }
   }
-
+  
   //parseGame
   async parse(req, res) {
     try {
