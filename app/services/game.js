@@ -10,6 +10,9 @@ class GameService {
 
   //games/new
   async createGame(body) {
+    const { v4: uuidv4 } = require('uuid');
+    let test_uuid = uuidv4();
+    this.log.info(test_uuid);
     const Games = this.mongoose.model('Games');
     const Players = this.mongoose.model('Players');
     const BlackCards = this.mongoose.model('BlackCards');
