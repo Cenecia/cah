@@ -65,11 +65,7 @@ class GameService {
 
     newGame = await newGame.save();
     //newGame = await Games.findOne({_id: newGame._id}).populate('players');
-    newGame = 
-      await Games.findOne({_id: newGame._id})
-      .populate({ path: 'players', select: 'name' })
-      .populate({ path: 'players', select: 'points' })
-      .populate({ path: 'players', select: 'active' });
+    newGame = await Games.findOne({_id: newGame._id}).populate({ path: 'players', select: ['name','points','active'] });
 
     let returnMe = {
       whiteCardCount: newGame.whiteCards.length,
@@ -87,23 +83,28 @@ class GameService {
 
   //games/join
   async joinGame(body) {
+    const { v4: uuidv4 } = require('uuid');
     const Games = this.mongoose.model('Games');
     const Players = this.mongoose.model('Players');
     const Rounds = this.mongoose.model('Rounds');
 
+    let guid = uuidv4();
     let newPlayer = new Players({
       name: body.player,
       hand: [],
       points: 0,
       active: true,
-      mulligans: 1
+      mulligans: 1,
+      guid: guid
     });
     newPlayer = await newPlayer.save();
     
     let game = await Games.findOne({_id: body.gameID});
     game.players.push(newPlayer._id);
     game = await game.save();
-    game = await Games.findOne({_id: body.gameID}).populate('players');
+    game = 
+      await Games.findOne({_id: body.gameID}).populate({ path: 'players', select: ['name','points','active'] });
+
 
     let latestRound = await Rounds.findOne({game: body.gameID, status: "submit"})
                                   .populate({
@@ -120,7 +121,9 @@ class GameService {
       gameID: game._id,
       players: game.players,
       rounds: game.rounds,
-      latestRound: latestRound
+      latestRound: latestRound,
+      guid: guid,
+      playerID: newPlayer._id
     };
 
     this.log.info(newPlayer.name+' joined game.');
@@ -131,7 +134,7 @@ class GameService {
   async getGame(body){
     const Games = this.mongoose.model('Games');
    
-    let game = await Games.findOne({_id: body.gameID}).populate('players').populate('winner');
+    let game = await Games.findOne({_id: body.gameID}).populate({ path: 'players', select: ['name','points','active'] }).populate('winner');
     
     return game;
   }
@@ -215,7 +218,7 @@ class GameService {
     });
     
     round = Rounds.findOne({_id: round._id})
-                    .populate('players')
+                    .populate({ path: 'players', select: ['name','points','active'] })
                     .populate('game').populate({
                       path: 'blackCard',
                       populate: {
@@ -295,7 +298,7 @@ class GameService {
     round = await round.save();
 
     round = await Rounds.findOne({_id: body.roundID})
-                          .populate('players')
+                          .populate({ path: 'players', select: ['name','points','active'] })
                           .populate('game')
                           .populate({
                             path: 'blackCard',
@@ -337,7 +340,7 @@ class GameService {
       round.winner = body.player;
       round.status = 'closed';
       round = await round.save();
-      round = await Rounds.findOne({_id: body.roundID}).populate('players').populate('game').populate('winner');
+      round = await Rounds.findOne({_id: body.roundID}).populate({ path: 'players', select: ['name','points','active'] }).populate('game').populate('winner');
 
       this.log.info('Winning Card Selected.');
     }
@@ -365,7 +368,7 @@ class GameService {
     let now = new Date();
 
     let round = await Rounds.findOne({_id: body.roundID})
-                              .populate('players')
+                              .populate({ path: 'players', select: ['name','points','active'] })
                               .populate('game')
                               .populate('winner')
                               .populate({
@@ -395,7 +398,7 @@ class GameService {
     
     //Need to figure out a way to include candidateCards here
     let round = await Rounds.findOne({ _id: latestRoundId })
-                              .populate('players')
+                              .populate({ path: 'players', select: ['name','points','active'] })
                               .populate('winner')
                               .populate({
                                 path: 'blackCard',
