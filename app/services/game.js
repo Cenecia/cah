@@ -322,6 +322,13 @@ class GameService {
     const Games = this.mongoose.model('Games');
 
     let round = await Rounds.findOne({_id: body.roundID}).populate('players');
+    let czarPlayer = await Players.findOne({_id: body.playerID});
+
+    //Check that the czar is the one who submitted and check their guid
+    if(czarPlayer._id.toString() !== body.playerID || czarPlayer.guid !== body.guid){
+      this.log.info("wrong id");
+      return 'wrong guid';
+    }
     let game = await Games.findOne({_id: round.game });
     if(round.status == 'select'){
       round.players.forEach(async player => {
