@@ -251,9 +251,16 @@ class GameService {
       return 'Already submitted a card';
     }
 
+    let player = await Players.findOne({_id: body.playerID});
+    if(body.guid !== player.guid){
+      this.log.info("wrong guid");
+      return 'wrong guid';
+    }
+
     var candidateCards = [];
     
     //Get the white cards and add the text as a candidate card
+    //TO DO: Check that white card is in that player's hand
     for (let index = 0; index < body.whiteCards.length; index++) {
       this.log.info('White card submitted');
       let candidateCard = await WhiteCards.findOne({_id:body.whiteCards[index].cardID});
@@ -270,9 +277,7 @@ class GameService {
       cards: candidateCards
     });
 
-    let game = await Games.findOne({_id: round.game});
-
-    let player = await Players.findOne({_id: body.playerID});
+    let game = await Games.findOne({_id: round.game});    
 
     //remove the submitted white cards from the player's hand
     body.whiteCards.forEach(async whiteCard => {
