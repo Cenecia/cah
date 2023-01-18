@@ -370,6 +370,11 @@ class GameService {
        model: 'Sets'
      }});
 
+     this.log.info("player guid "+player.guid+" submitted guid "+body.guid);
+     if(player.guid !== body.guid){
+      return 'wrong guid';
+     }
+
     return player;
   }
 
