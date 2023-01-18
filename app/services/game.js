@@ -11,8 +11,6 @@ class GameService {
   //games/new
   async createGame(body) {
     const { v4: uuidv4 } = require('uuid');
-    let test_uuid = uuidv4();
-    this.log.info(test_uuid);
     const Games = this.mongoose.model('Games');
     const Players = this.mongoose.model('Players');
     const BlackCards = this.mongoose.model('BlackCards');
@@ -370,7 +368,6 @@ class GameService {
        model: 'Sets'
      }});
 
-     this.log.info("player guid "+player.guid+" submitted guid "+body.guid);
      if(player.guid !== body.guid){
       return 'wrong guid';
      }
@@ -519,8 +516,6 @@ class GameService {
       }
     });
     
-    this.log.info(duplicates);
-    
     return {
       whiteCardDeck: whiteCardDeck,
       blackCardDeck: blackCardDeck
@@ -532,6 +527,11 @@ class GameService {
     const Players = this.mongoose.model('Players');
     
     let player = await Players.findOne({_id: body.playerID});
+    
+    if(body.guid !== player.guid){
+      return 'wrong guid';
+    }
+
     if(player.mulligans > 0){
       const Games = this.mongoose.model('Games');
       let game = await Games.findOne({_id: body.gameID});
