@@ -10,6 +10,7 @@ class GameService {
 
   //games/new
   async createGame(body) {
+    const { v4: uuidv4 } = require('uuid');
     const Games = this.mongoose.model('Games');
     const Players = this.mongoose.model('Players');
     const BlackCards = this.mongoose.model('BlackCards');
@@ -29,12 +30,15 @@ class GameService {
       }
     });
 
+    let guid = uuidv4();
+
     let playerOne = new Players({
       name: body.player,
       hand: [],
       points: 0,
       active: true,
-      mulligans: 1
+      mulligans: 1,
+      guid: guid
     });
     playerOne = await playerOne.save();
     
@@ -58,13 +62,16 @@ class GameService {
     });
 
     newGame = await newGame.save();
-    newGame = await Games.findOne({_id: newGame._id}).populate('players');
+    //newGame = await Games.findOne({_id: newGame._id}).populate('players');
+    newGame = await Games.findOne({_id: newGame._id}).populate({ path: 'players', select: ['name','points','active'] });
 
     let returnMe = {
       whiteCardCount: newGame.whiteCards.length,
       blackCardCount: newGame.blackCards.length,
       gameID: newGame._id,
-      players: newGame.players
+      players: newGame.players,
+      playerID: newGame.players[0]._id,
+      guid: guid
     };
 
     this.log.info('New game created.');
@@ -74,23 +81,28 @@ class GameService {
 
   //games/join
   async joinGame(body) {
+    const { v4: uuidv4 } = require('uuid');
     const Games = this.mongoose.model('Games');
     const Players = this.mongoose.model('Players');
     const Rounds = this.mongoose.model('Rounds');
 
+    let guid = uuidv4();
     let newPlayer = new Players({
       name: body.player,
       hand: [],
       points: 0,
       active: true,
-      mulligans: 1
+      mulligans: 1,
+      guid: guid
     });
     newPlayer = await newPlayer.save();
     
     let game = await Games.findOne({_id: body.gameID});
     game.players.push(newPlayer._id);
     game = await game.save();
-    game = await Games.findOne({_id: body.gameID}).populate('players');
+    game = 
+      await Games.findOne({_id: body.gameID}).populate({ path: 'players', select: ['name','points','active'] });
+
 
     let latestRound = await Rounds.findOne({game: body.gameID, status: "submit"})
                                   .populate({
@@ -107,7 +119,9 @@ class GameService {
       gameID: game._id,
       players: game.players,
       rounds: game.rounds,
-      latestRound: latestRound
+      latestRound: latestRound,
+      guid: guid,
+      playerID: newPlayer._id
     };
 
     this.log.info(newPlayer.name+' joined game.');
@@ -118,7 +132,7 @@ class GameService {
   async getGame(body){
     const Games = this.mongoose.model('Games');
    
-    let game = await Games.findOne({_id: body.gameID}).populate('players').populate('winner');
+    let game = await Games.findOne({_id: body.gameID}).populate({ path: 'players', select: ['name','points','active'] }).populate('winner');
     
     return game;
   }
@@ -202,7 +216,7 @@ class GameService {
     });
     
     round = Rounds.findOne({_id: round._id})
-                    .populate('players')
+                    .populate({ path: 'players', select: ['name','points','active'] })
                     .populate('game').populate({
                       path: 'blackCard',
                       populate: {
@@ -235,9 +249,16 @@ class GameService {
       return 'Already submitted a card';
     }
 
+    let player = await Players.findOne({_id: body.playerID});
+    if(body.guid !== player.guid){
+      this.log.info("wrong guid");
+      return 'wrong guid';
+    }
+
     var candidateCards = [];
     
     //Get the white cards and add the text as a candidate card
+    //TO DO: Check that white card is in that player's hand
     for (let index = 0; index < body.whiteCards.length; index++) {
       this.log.info('White card submitted');
       let candidateCard = await WhiteCards.findOne({_id:body.whiteCards[index].cardID});
@@ -254,9 +275,7 @@ class GameService {
       cards: candidateCards
     });
 
-    let game = await Games.findOne({_id: round.game});
-
-    let player = await Players.findOne({_id: body.playerID});
+    let game = await Games.findOne({_id: round.game});    
 
     //remove the submitted white cards from the player's hand
     body.whiteCards.forEach(async whiteCard => {
@@ -282,7 +301,7 @@ class GameService {
     round = await round.save();
 
     round = await Rounds.findOne({_id: body.roundID})
-                          .populate('players')
+                          .populate({ path: 'players', select: ['name','points','active'] })
                           .populate('game')
                           .populate({
                             path: 'blackCard',
@@ -301,6 +320,13 @@ class GameService {
     const Games = this.mongoose.model('Games');
 
     let round = await Rounds.findOne({_id: body.roundID}).populate('players');
+    let czarPlayer = await Players.findOne({_id: body.playerID});
+
+    //Check that the czar is the one who submitted and check their guid
+    if(czarPlayer._id.toString() !== body.playerID || czarPlayer.guid !== body.guid){
+      this.log.info("wrong id");
+      return 'wrong guid';
+    }
     let game = await Games.findOne({_id: round.game });
     if(round.status == 'select'){
       round.players.forEach(async player => {
@@ -324,7 +350,7 @@ class GameService {
       round.winner = body.player;
       round.status = 'closed';
       round = await round.save();
-      round = await Rounds.findOne({_id: body.roundID}).populate('players').populate('game').populate('winner');
+      round = await Rounds.findOne({_id: body.roundID}).populate({ path: 'players', select: ['name','points','active'] }).populate('game').populate('winner');
 
       this.log.info('Winning Card Selected.');
     }
@@ -342,6 +368,10 @@ class GameService {
        model: 'Sets'
      }});
 
+     if(player.guid !== body.guid){
+      return 'wrong guid';
+     }
+
     return player;
   }
 
@@ -352,7 +382,7 @@ class GameService {
     let now = new Date();
 
     let round = await Rounds.findOne({_id: body.roundID})
-                              .populate('players')
+                              .populate({ path: 'players', select: ['name','points','active'] })
                               .populate('game')
                               .populate('winner')
                               .populate({
@@ -382,7 +412,7 @@ class GameService {
     
     //Need to figure out a way to include candidateCards here
     let round = await Rounds.findOne({ _id: latestRoundId })
-                              .populate('players')
+                              .populate({ path: 'players', select: ['name','points','active'] })
                               .populate('winner')
                               .populate({
                                 path: 'blackCard',
@@ -486,8 +516,6 @@ class GameService {
       }
     });
     
-    this.log.info(duplicates);
-    
     return {
       whiteCardDeck: whiteCardDeck,
       blackCardDeck: blackCardDeck
@@ -499,6 +527,11 @@ class GameService {
     const Players = this.mongoose.model('Players');
     
     let player = await Players.findOne({_id: body.playerID});
+    
+    if(body.guid !== player.guid){
+      return 'wrong guid';
+    }
+
     if(player.mulligans > 0){
       const Games = this.mongoose.model('Games');
       let game = await Games.findOne({_id: body.gameID});

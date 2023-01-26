@@ -11,6 +11,7 @@ const playerSchema = new mongoose.Schema({
   points: { type: Number },
   active: { type: Boolean },
   mulligans: { type: Number },
+  guid: { type: String }
 });
 
 module.exports = mongoose.model('Players', playerSchema);

@@ -12,7 +12,8 @@
     "restify": "^8.6.1",
     "restify-errors": "^8.0.1",
     "restify-url-semver": "^1.1.1",
-    "winston": "^3.1.0"
+    "winston": "^3.1.0",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {},
   "scripts": {
