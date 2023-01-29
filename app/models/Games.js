@@ -18,6 +18,8 @@ const gameSchema = new mongoose.Schema({
   players: [{ type: ObjectId, required: true, ref: "Players" }],
   whiteCards: [{ type: ObjectId, required: true, ref: "WhiteCards" }],
   blackCards: [{ type: ObjectId, required: true, ref: "BlackCards" }],
+  blackRemaining: Number,
+  whiteRemaining: Number,
   rounds: [{ type: ObjectId, required: true, ref: "Rounds" }],
   czar: Number,
   timeLimit: Number,
