@@ -134,7 +134,7 @@ class GameService {
   async getGame(body){
     const Games = this.mongoose.model('Games');
    
-    let game = await Games.findOne({_id: body.gameID}).populate({ path: 'players', select: ['name','points','active'] }).populate('winner');
+    let game = await Games.findOne({_id: body.gameID}, '-whiteCards -blackCards').populate({ path: 'players', select: ['name','points','active'] }).populate('winner');
     
     return game;
   }
@@ -185,6 +185,7 @@ class GameService {
     
     game.rounds.push(round);
     game.blackCards = game.blackCards.filter(e => e._id !== round.blackCard);
+    game.blackRemaining = game.blackCards.length;
     
     //Count white cards we need to distribute
     let newWhiteCardCount = 0;
@@ -204,6 +205,7 @@ class GameService {
     //newWhiteCards is now all the cards we will give back to players
     //possibleWhiteCards is all the remaining whitecards in the deck
     game.whiteCards = possibleWhiteCards.filter(wc => !newWhiteCards.some(nwc => nwc == wc));
+    game.whiteRemaining = game.whiteCards.length;
     game = await game.save();
 
     //Give each player (handSize) white cards
@@ -219,7 +221,7 @@ class GameService {
     
     round = Rounds.findOne({_id: round._id})
                     .populate({ path: 'players', select: ['name','points','active'] })
-                    .populate('game').populate({
+                    .populate('game', '-whiteCards -blackCards').populate({
                       path: 'blackCard',
                       populate: {
                         path: 'set',
@@ -406,12 +408,13 @@ class GameService {
   }
 
   //games/getLatestRound
+  whiteRemaining;
   async getLatestRound (body){
     const Rounds = this.mongoose.model('Rounds');
     const Games = this.mongoose.model('Games');
     const Players = this.mongoose.model('Players');
-    let game = await Games.findOne({_id: body.gameID}).populate('winner');
-    
+    let game = await Games.findOne({_id: body.gameID}, '-whiteCards -blackCards').populate('winner');
+
     let latestRoundId = game.rounds[game.rounds.length - 1];
     
     //Need to figure out a way to include candidateCards here
