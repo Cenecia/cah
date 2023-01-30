@@ -408,7 +408,6 @@ class GameService {
   }
 
   //games/getLatestRound
-  whiteRemaining;
   async getLatestRound (body){
     const Rounds = this.mongoose.model('Rounds');
     const Games = this.mongoose.model('Games');
