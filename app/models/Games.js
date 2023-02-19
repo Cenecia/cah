@@ -25,6 +25,7 @@ const gameSchema = new mongoose.Schema({
   czar: Number,
   timeLimit: Number,
   scoreLimit: Number,
+  playerLimit: Number,
   winner: { type: ObjectId, required: false, ref: "Players" },
   name: String
 });
