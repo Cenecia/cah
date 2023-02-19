@@ -21,6 +21,7 @@ class GameService {
     let scoreLimit = body.player == "Cenetest" ? 2 : body.score_limit;
     let gameName = body.name;
     let handSize = body.handSize;
+    let playerLimit = body.playerLimit;
     
     let blackCardDeck = await BlackCards.find({ set: { $in: sets } });
     let whiteCardDeck = await WhiteCards.find({ set: { $in: sets } });
@@ -52,8 +53,11 @@ class GameService {
       czar: -1,
       timeLimit: timeLimit,
       scoreLimit: scoreLimit,
+      playerLimit: playerLimit,
       name: gameName
     });
+
+    this.log.info("player limit is "+newGame.playerLimit);
 
     blackCardDeck.forEach(b => {
       newGame.blackCards.push(b._id);
@@ -64,7 +68,6 @@ class GameService {
     });
 
     newGame = await newGame.save();
-    //newGame = await Games.findOne({_id: newGame._id}).populate('players');
     newGame = await Games.findOne({_id: newGame._id}).populate({ path: 'players', select: ['name','points','active'] });
 
     let returnMe = {
@@ -88,6 +91,14 @@ class GameService {
     const Players = this.mongoose.model('Players');
     const Rounds = this.mongoose.model('Rounds');
 
+    let game = await Games.findOne({_id: body.gameID});
+
+    this.log.info("Player limit is"+game.playerLimit+" Currently "+game.players.length+" players.");
+
+    if(game.players.length >= game.playerLimit){
+      return "player limit reached";
+    }
+
     let guid = uuidv4();
     let newPlayer = new Players({
       name: body.player,
@@ -99,7 +110,7 @@ class GameService {
     });
     newPlayer = await newPlayer.save();
     
-    let game = await Games.findOne({_id: body.gameID});
+    
     game.players.push(newPlayer._id);
     game = await game.save();
     game = 
