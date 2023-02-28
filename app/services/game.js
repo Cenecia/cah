@@ -54,7 +54,8 @@ class GameService {
       timeLimit: timeLimit,
       scoreLimit: scoreLimit,
       playerLimit: playerLimit,
-      name: gameName
+      name: gameName,
+      sets: sets
     });
 
     this.log.info("player limit is "+newGame.playerLimit);
@@ -156,7 +157,6 @@ class GameService {
     const Rounds = this.mongoose.model('Rounds');
     const Players = this.mongoose.model('Players');
     const BlackCards = this.mongoose.model('BlackCards');
-    //const handSize = 8;
 
     let game = await Games.findOne({_id: body.gameID}).populate('players');
     
@@ -180,7 +180,7 @@ class GameService {
       } else {
         game.czar++;
       }
-    } while (!game.players[game.czar].active);
+    } while (!game.players[game.czar].active);    
     
     let round = new Rounds({
       players: game.players,
@@ -194,10 +194,19 @@ class GameService {
 
     round = await round.save();
     
-    game.rounds.push(round);
+    game.rounds.push(round);    
+
+    //If we are out of black cards, reload from the sets selected at the start of the game
+    if(game.blackCards.length <= 1){
+      let blackCardDeck = await BlackCards.find({ set: { $in: game.sets } });
+      game.blackCards = [];
+      blackCardDeck.forEach(b => {
+        game.blackCards.push(b._id);
+      });
+    }
     game.blackCards = game.blackCards.filter(e => e._id !== round.blackCard);
     game.blackRemaining = game.blackCards.length;
-    
+
     //Count white cards we need to distribute
     let newWhiteCardCount = 0;
     round.players.forEach(p => {
