@@ -157,6 +157,7 @@ class GameService {
     const Rounds = this.mongoose.model('Rounds');
     const Players = this.mongoose.model('Players');
     const BlackCards = this.mongoose.model('BlackCards');
+    const WhiteCards = this.mongoose.model('WhiteCards');
 
     let game = await Games.findOne({_id: body.gameID}).populate('players');
     
@@ -215,6 +216,24 @@ class GameService {
     
     let newWhiteCards = [];
     let possibleWhiteCards = [];
+
+    round.players.forEach(p => {
+      //whiteCardsInHands[...p.hand];
+      this.log.info("player hand", p.hand);
+    })
+
+    //If we don't have enough white cards to refill hands, reload from sets
+    if(game.whiteCards.length <= newWhiteCardCount){
+      let whiteCardsInHands = [];
+      round.players.forEach(p => {
+        
+      })
+      let whiteCardDeck = await WhiteCards.find({ set: { $in: game.sets } });
+      game.whiteCards = [];
+      whiteCardDeck.forEach(b => {
+        game.whiteCards.push(b._id);
+      });
+    }
     
     //Take the number of white cards we need out of the game's whitecard deck
     for (var index = 0; index < newWhiteCardCount; index++) {
