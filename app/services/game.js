@@ -21,6 +21,7 @@ class GameService {
     let scoreLimit = body.player == "Cenetest" ? 2 : body.score_limit;
     let gameName = body.name;
     let handSize = body.handSize;
+    let playerLimit = body.playerLimit;
     
     let blackCardDeck = await BlackCards.find({ set: { $in: sets } });
     let whiteCardDeck = await WhiteCards.find({ set: { $in: sets } });
@@ -52,8 +53,12 @@ class GameService {
       czar: -1,
       timeLimit: timeLimit,
       scoreLimit: scoreLimit,
-      name: gameName
+      playerLimit: playerLimit,
+      name: gameName,
+      sets: sets
     });
+
+    this.log.info("player limit is "+newGame.playerLimit);
 
     blackCardDeck.forEach(b => {
       newGame.blackCards.push(b._id);
@@ -64,7 +69,6 @@ class GameService {
     });
 
     newGame = await newGame.save();
-    //newGame = await Games.findOne({_id: newGame._id}).populate('players');
     newGame = await Games.findOne({_id: newGame._id}).populate({ path: 'players', select: ['name','points','active'] });
 
     let returnMe = {
@@ -88,6 +92,14 @@ class GameService {
     const Players = this.mongoose.model('Players');
     const Rounds = this.mongoose.model('Rounds');
 
+    let game = await Games.findOne({_id: body.gameID});
+
+    this.log.info("Player limit is"+game.playerLimit+" Currently "+game.players.length+" players.");
+
+    if(game.players.length >= game.playerLimit){
+      return "player limit reached";
+    }
+
     let guid = uuidv4();
     let newPlayer = new Players({
       name: body.player,
@@ -99,7 +111,7 @@ class GameService {
     });
     newPlayer = await newPlayer.save();
     
-    let game = await Games.findOne({_id: body.gameID});
+    
     game.players.push(newPlayer._id);
     game = await game.save();
     game = 
@@ -145,7 +157,7 @@ class GameService {
     const Rounds = this.mongoose.model('Rounds');
     const Players = this.mongoose.model('Players');
     const BlackCards = this.mongoose.model('BlackCards');
-    //const handSize = 8;
+    const WhiteCards = this.mongoose.model('WhiteCards');
 
     let game = await Games.findOne({_id: body.gameID}).populate('players');
     
@@ -169,7 +181,7 @@ class GameService {
       } else {
         game.czar++;
       }
-    } while (!game.players[game.czar].active);
+    } while (!game.players[game.czar].active);    
     
     let round = new Rounds({
       players: game.players,
@@ -183,10 +195,19 @@ class GameService {
 
     round = await round.save();
     
-    game.rounds.push(round);
+    game.rounds.push(round);    
+
+    //If we are out of black cards, reload from the sets selected at the start of the game
+    if(game.blackCards.length <= 1){
+      let blackCardDeck = await BlackCards.find({ set: { $in: game.sets } });
+      game.blackCards = [];
+      blackCardDeck.forEach(b => {
+        game.blackCards.push(b._id);
+      });
+    }
     game.blackCards = game.blackCards.filter(e => e._id !== round.blackCard);
     game.blackRemaining = game.blackCards.length;
-    
+
     //Count white cards we need to distribute
     let newWhiteCardCount = 0;
     round.players.forEach(p => {
@@ -195,6 +216,24 @@ class GameService {
     
     let newWhiteCards = [];
     let possibleWhiteCards = [];
+
+    round.players.forEach(p => {
+      //whiteCardsInHands[...p.hand];
+      this.log.info("player hand", p.hand);
+    })
+
+    //If we don't have enough white cards to refill hands, reload from sets
+    if(game.whiteCards.length <= newWhiteCardCount){
+      let whiteCardsInHands = [];
+      round.players.forEach(p => {
+        
+      })
+      let whiteCardDeck = await WhiteCards.find({ set: { $in: game.sets } });
+      game.whiteCards = [];
+      whiteCardDeck.forEach(b => {
+        game.whiteCards.push(b._id);
+      });
+    }
     
     //Take the number of white cards we need out of the game's whitecard deck
     for (var index = 0; index < newWhiteCardCount; index++) {
