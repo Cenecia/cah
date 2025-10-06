@@ -13,30 +13,16 @@ const validator = require('./app/lib/validator');
 const handler = require('./app/lib/error_handler');
 const routes = require('./app/routes/routes');
 const logger = serviceLocator.get('logger');
-// const server = restify.createServer({
-//   name: config.app.name,
-//   versions: ['1.0.0'],
-//   formatters: {
-//     'application/json': require('./app/lib/jsend')
-//   }
-// });
+
 const server = restify.createServer({
   name: config.app.name
-  // The 'formatters' property has been removed
-});
-
-// --- ADD THIS TEST ROUTE HERE ---
-server.get('/hello', (req, res, next) => {
-  console.log('--- TEST ROUTE HIT! ---');
-  res.send({ message: 'Hello from the test route!' });
-  return next();
 });
 
 // Initialize the database
 const Database = require('./app/configs/database');
 new Database(config.mongo.port, config.mongo.host, config.mongo.name);
 
-// --- 2. CONFIGURE AND APPLY CORS ---
+//CORS Middleware Setup
 const cors = corsMiddleware({
   origins: ['*'], // Allow all origins for local testing
   allowHeaders: ['Authorization'], // Customize allowed headers
@@ -47,7 +33,6 @@ const cors = corsMiddleware({
 server.pre(cors.preflight);
 // Handle the actual CORS requests
 server.use(cors.actual);
-// ------------------------------------
 
 // Set API versioning and allow trailing slashes
 server.pre(restify.pre.sanitizePath());
