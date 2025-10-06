@@ -4,18 +4,17 @@
   "description": "Cards Against Humanity API",
   "main": "server.js",
   "dependencies": {
-    "dotenv": "^8.2.0",
-    "express": "^4.17.1",
-    "http-status": "^1.4.2",
-    "joi": "^14.3.1",
-    "mongoose": "^5.13.20",
-    "restify": "^8.6.1",
-    "restify-errors": "^8.0.1",
-    "restify-url-semver": "^1.1.1",
-    "winston": "^3.1.0",
-    "uuid": "^9.0.0"
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "http-status": "^2.1.0",
+    "joi": "^18.0.1",
+    "mongoose": "^8.19.0",
+    "restify": "^11.1.0",
+    "restify-cors-middleware2": "^2.2.1",
+    "restify-errors": "^8.0.2",
+    "uuid": "^13.0.0",
+    "winston": "^3.18.3"
   },
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"

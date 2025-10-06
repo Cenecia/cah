@@ -1,6 +1,6 @@
 #Each instruction in this file creates a new layer
 #Here we are getting our node as Base image
-FROM node:10.15.0
+FROM node:18-slim
 #Creating a new directory for app files and setting path in the container
 RUN mkdir -p /usr/src/app
 #setting working directory in the container
