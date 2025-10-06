@@ -35,7 +35,8 @@ module.exports.paramValidation = function (log, joi) {
           return;
         }
 
-        let result = joi.validate(req[i], validation[i], options);
+        //let result = joi.validate(req[i], validation[i], options);
+        let result = validation[i].validate(req[i], options);
 
         if (result.error) {
           log.debug('validation error - %s', result.error.message);
