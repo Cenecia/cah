@@ -173,6 +173,8 @@ class GameController {
   async getAllSets(req, res) {
     try {
       const result = await this.gameService.getAllSets();
+      console.log('TEST');
+      this.log.info('Sets retrieved: ' + result.length);
 
       res.send(result);
     } catch (err) {
