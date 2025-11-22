@@ -353,8 +353,11 @@ MigrationBackup/
 
 #mongo backup JSON files
 sets.json
+sets2.json
 whitecards.json
+whitecards2.json
 blackcards.json
+blackcards2.json
 
 #docker mongo db
 /data/

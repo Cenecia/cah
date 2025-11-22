@@ -141,8 +141,11 @@ module.exports.register = (server, serviceLocator) => {
       version: '1.0.0'
     },
     (req, res, next) => {
-      //serviceLocator.get('gameController').parse(req, res, next);
-      return "Test!";
+      console.log('TEST ROUTE');
+      // Send a JSON response back to the client
+      res.send({ message: 'Test!' }); 
+      // Call next() to properly end the request cycle
+      return next();
     }
   );
 
@@ -198,6 +201,7 @@ module.exports.register = (server, serviceLocator) => {
       version: '1.0.0'
     },
     (req, res, next) => {
+      console.log('GET ALL SETS ROUTE');
       serviceLocator.get('gameController').getAllSets(req, res, next)
     }
   );

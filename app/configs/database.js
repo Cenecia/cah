@@ -11,11 +11,8 @@ class Database {
 
   _connect(port, host, name) {
     this.mongoose.Promise = global.Promise;
-    this.mongoose.connect(`mongodb://${host}:${port}/${name}`, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      useCreateIndex: true
-    });
+    this.mongoose.connect(`mongodb://${host}:${port}/${name}`);
+
     const {connection} = this.mongoose;
     connection.on('connected', () =>
       logger.info('Database Connection was Successful')
