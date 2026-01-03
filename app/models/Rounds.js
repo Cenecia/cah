@@ -24,6 +24,12 @@ const roundSchema = new mongoose.Schema({
   czar: { type: ObjectId, required: true, ref: "Players" },
   winner: { type: ObjectId, required: false, ref: "Players" },
   startTime: { type: Date }
+},{ toJSON: { virtuals: true }, toObject: { virtuals: true } });
+
+// Define the virtual property
+roundSchema.virtual('timeLeft').get(function() {
+    if (!this.startTime) return 0;
+    return new Date() - this.startTime;
 });
 
 module.exports = mongoose.model('Rounds', roundSchema);
